@@ -359,6 +359,37 @@ int main(int argc, char **argv)
 	/* int h = 2160; */
 	/* int samples = 5000;  */
 
+
+////////////////////////////////// INITIALISATION /////////////////////////////////////////
+
+
+
+	MPI_Init(&argc,&argv);
+
+	int rank,size;
+
+  	MPI_Comm_rank(MPI_COMM_WORLD,&rank);
+  	MPI_Comm_size(MPI_COMM_WORLD,&size);
+
+  	int ligneSuivante=size;
+
+  	int maLigne;
+
+  	int ligneMilieu;
+
+  	int ligneDebut,ligneFin;
+
+  	ligneDebut=rank*h/size;
+  	ligneFin=(rank+1)*h/size;
+
+
+
+
+//////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
 	if (argc == 2) 
 		samples = atoi(argv[1]) / 4;
 
@@ -395,8 +426,29 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
+	double *imageFinal = malloc(3 * w * h * sizeof(*image));
+	if (image == NULL) {
+		perror("Impossible d'allouer l'image");
+		exit(1);
+	}
+
+	
+			
+
+
+////////////////////////////////////////////////////////////// PARALLELISATION ////////////////////////////////////////////////////////////////////////////////
+
+
+
 	for (int i = 0; i < h; i++) {
- 		unsigned short PRNG_state[3] = {0, 0, i*i*i};
+
+
+
+
+
+ 		unsigned short PRNG_state[3] = {0, 0, maLigne*maLigne*maLigne};
+
+
 		for (unsigned short j = 0; j < w; j++) {
 			/* calcule la luminance d'un pixel, avec sur-échantillonnage 2x2 */
 			double pixel_radiance[3] = {0, 0, 0};
@@ -431,10 +483,22 @@ int main(int argc, char **argv)
 					axpy(0.25, subpixel_radiance, pixel_radiance);
 				}
 			}
-			copy(pixel_radiance, image + 3 * ((h - 1 - i) * w + j)); // <-- retournement vertical
+			copy(pixel_radiance, image + 3 * ((h - 1 - maLigne) * w + j)); // <-- retournement vertical
 		}
 	}
+
+	MPI_Gather(image,w*h/size, MPI_UNSIGNED_CHAR,imageFinal,w*h/size,MPI_UNSIGNED_CHAR,0,MPI_COMM_WORLD);
+
+
 	fprintf(stderr, "\n");
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////:
+
+
+
 
 	/* stocke l'image dans un fichier au format NetPbm */
 	{
