@@ -350,8 +350,8 @@ int toInt(double x)
 int main(int argc, char **argv)
 { 
 	/* Petit cas test (small, quick and dirty): */
-	int w = 320;
-	int h = 200;
+	int w = 320; 
+	int h = 200; 
 	int samples = 200;
 
 	/* Gros cas test (big, slow and pretty): */
@@ -440,10 +440,7 @@ int main(int argc, char **argv)
 
 
 
-	for (int i = 0; i < h; i++) {
-
-
-
+	for (maLigne= ligneDebut; maLigne < ligneFin; maLigne++) {
 
 
  		unsigned short PRNG_state[3] = {0, 0, maLigne*maLigne*maLigne};
@@ -464,7 +461,7 @@ int main(int argc, char **argv)
 						double dy = (r2 < 1) ? sqrt(r2) - 1 : 1 - sqrt(2 - r2);
 						double ray_direction[3];
 						copy(camera_direction, ray_direction);
-						axpy(((sub_i + .5 + dy) / 2 + i) / h - .5, cy, ray_direction);
+						axpy(((sub_i + .5 + dy) / 2 + maLigne) / h - .5, cy, ray_direction);
 						axpy(((sub_j + .5 + dx) / 2 + j) / w - .5, cx, ray_direction);
 						normalize(ray_direction);
 
@@ -501,7 +498,8 @@ int main(int argc, char **argv)
 
 
 	/* stocke l'image dans un fichier au format NetPbm */
-	{
+	
+	if (rank==0){
 		struct passwd *pass; 
 		char nom_sortie[100] = "";
 		char nom_rep[30] = "";
