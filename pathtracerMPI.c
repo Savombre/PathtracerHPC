@@ -43,6 +43,8 @@ struct Sphere spheres[] = {
    {1e5,  {50,      40.8,      -1e5 + 170}, {},           {},                 DIFF, -1}, // Front 
    {1e5,  {50,      1e5,        81.6},      {},           {0.75, .75,  .75},  DIFF, -1}, // Bottom 
    {1e5,  {50,     -1e5 + 81.6, 81.6},      {},           {0.75, .75,  .75},  DIFF, -1}, // Top 
+
+/*
    {16.5, {40,      16.5,       47},        {},           {.999, .999, .999}, SPEC, -1}, // Mirror 
    {16.5, {73,      46.5,       88},        {},           {.999, .999, .999}, REFR, -1}, // Glass 
    {10,   {15,      45,         112},       {},           {.999, .999, .999}, DIFF, -1}, // white ball
@@ -50,6 +52,10 @@ struct Sphere spheres[] = {
    {7.5,  {40,      8,          120},        {},           {.999, .999, 0   }, REFR, -1}, // small yellow glass middle
    {8.5,  {60,      9,          110},        {},           {.999, .999, 0   }, REFR, -1}, // small yellow glass right
    {10,   {80,      12,         92},        {},           {0, .999, 0},       DIFF, -1}, // green ball
+
+
+*/
+
    {600,  {50,      681.33,     81.6},      {12, 12, 12}, {},                 DIFF, -1},  // Light 
    {5,    {50,      75,         81.6},      {},           {0, .682, .999}, DIFF, -1}, // occlusion, mirror
 }; 
@@ -360,7 +366,7 @@ int main(int argc, char **argv)
 	//int h = 200; 
 	//int samples = 200;
 
-	int w = 170;
+	int w = 160;
 	int h = 100;
 	int samples = 100;
 
@@ -430,24 +436,33 @@ int main(int argc, char **argv)
 		}
 	}
 
+
+////////////////////////////////////////////////////////////// PARALLELISATION ////////////////////////////////////////////////////////////////////////////////
+
+
 	/* boucle principale */
-	double *image = malloc(3 * w * h * sizeof(*image));
+	double *image = malloc(3 * w * h/size * sizeof(*image));
 	if (image == NULL) {
 		perror("Impossible d'allouer l'image");
 		exit(1);
 	}
 
-	double *imageFinal = malloc(3 * w * h * sizeof(*image));
-	if (image == NULL) {
-		perror("Impossible d'allouer l'image");
-		exit(1);
+	double *imageFinal;
+
+	if (rank==0){
+
+		imageFinal = (double *) malloc(3 * w * h * sizeof(*imageFinal));
+		if (imageFinal == NULL) {
+			perror("Impossible d'allouer l'image");
+			exit(1);
+		}
 	}
 
 	
 			
 
 
-////////////////////////////////////////////////////////////// PARALLELISATION ////////////////////////////////////////////////////////////////////////////////
+
 
 
 
@@ -506,12 +521,15 @@ int main(int argc, char **argv)
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////:
 
 
-	printf("\n On va enregistrer l'image")
+
 
 
 	/* stocke l'image dans un fichier au format NetPbm */
 	
 	if (rank==0){
+
+		printf("\n Enregistrement de l'image \n");
+
 		struct passwd *pass; 
 		char nom_sortie[100] = "";
 		char nom_rep[30] = "";
