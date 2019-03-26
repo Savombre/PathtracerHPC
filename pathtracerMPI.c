@@ -55,6 +55,9 @@ struct Sphere spheres[] = {
 }; 
 
 
+//////////////////////////////////////////// AVANT LE MAIN ///////////////////////////////////////////////////////////////////////
+
+
 /********** micro BLAS LEVEL-1 + quelques fonctions non-standard **************/
 static inline void copy(const double *x, double *y)
 {
@@ -347,12 +350,20 @@ int toInt(double x)
 	return pow(x, 1 / 2.2) * 255 + .5;   /* gamma correction = 2.2 */
 } 
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////:
+
+
 int main(int argc, char **argv)
 { 
 	/* Petit cas test (small, quick and dirty): */
-	int w = 320; 
-	int h = 200; 
-	int samples = 200;
+	//int w = 320; 
+	//int h = 200; 
+	//int samples = 200;
+
+	int w = 170;
+	int h = 100;
+	int samples = 100;
+
 
 	/* Gros cas test (big, slow and pretty): */
 	/* int w = 3840; */
@@ -495,6 +506,7 @@ int main(int argc, char **argv)
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////:
 
 
+	printf("\n On va enregistrer l'image")
 
 
 	/* stocke l'image dans un fichier au format NetPbm */
@@ -512,9 +524,15 @@ int main(int argc, char **argv)
 		FILE *f = fopen(nom_sortie, "w");
 		fprintf(f, "P3\n%d %d\n%d\n", w, h, 255); 
 		for (int i = 0; i < w * h; i++) 
-	  		fprintf(f,"%d %d %d ", toInt(image[3 * i]), toInt(image[3 * i + 1]), toInt(image[3 * i + 2])); 
+	  		fprintf(f,"%d %d %d ", toInt(imageFinal[3 * i]), toInt(imageFinal[3 * i + 1]), toInt(imageFinal[3 * i + 2])); 
 		fclose(f); 
+
+		free(imageFinal);
 	}
 
 	free(image);
+
+
+
+	MPI_Finalize();
 }
