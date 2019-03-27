@@ -51,10 +51,11 @@ struct Sphere spheres[] = {
    {15,   {16,      16,         130},       {},           {.999, .999, 0},    REFR, -1}, // big yellow glass
    {7.5,  {40,      8,          120},        {},           {.999, .999, 0   }, REFR, -1}, // small yellow glass middle
    {8.5,  {60,      9,          110},        {},           {.999, .999, 0   }, REFR, -1}, // small yellow glass right
+*/
    {10,   {80,      12,         92},        {},           {0, .999, 0},       DIFF, -1}, // green ball
 
 
-*/
+
 
    {600,  {50,      681.33,     81.6},      {12, 12, 12}, {},                 DIFF, -1},  // Light 
    {5,    {50,      75,         81.6},      {},           {0, .682, .999}, DIFF, -1}, // occlusion, mirror
@@ -401,6 +402,10 @@ int main(int argc, char **argv)
 
 
 
+  	printf("\n Rank : %d, ligne Debut=%d, ligneFin=%d \n",rank,ligneDebut,ligneFin);
+
+
+
 
 //////////////////////////////////////////////////////////////////////////////////////
 
@@ -469,6 +474,8 @@ int main(int argc, char **argv)
 	for (maLigne= ligneDebut; maLigne < ligneFin; maLigne++) {
 
 
+
+
  		unsigned short PRNG_state[3] = {0, 0, maLigne*maLigne*maLigne};
 
 
@@ -494,7 +501,7 @@ int main(int argc, char **argv)
 						double ray_origin[3];
 						copy(camera_position, ray_origin);
 						axpy(140, ray_direction, ray_origin);
-						
+
 						/* estime la lumiance qui arrive sur la caméra par ce rayon */
 						double sample_radiance[3];
 						radiance(ray_origin, ray_direction, 0, PRNG_state, sample_radiance);
@@ -506,11 +513,17 @@ int main(int argc, char **argv)
 					axpy(0.25, subpixel_radiance, pixel_radiance);
 				}
 			}
-			copy(pixel_radiance, image + 3 * ((h - 1 - maLigne) * w + j)); // <-- retournement vertical
+
+		       // printf("\n pixel_radiance = {%d,%d,%d}\n",pixel_radiance[0],pixel_radiance[1],pixel_radiance[2]); 
+			copy(pixel_radiance, image + 3 * (((h/size) - 1 - (ligneFin-maLigne)) * w + j)); // <-- retournement vertical
 		}
+
+		printf("Rank :%d Jusqu'ici tout va bien\n",rank);
+
+		//if (rank==0) printf("%d\n",maLigne);
 	}
 
-	MPI_Gather(image,w*h/size, MPI_UNSIGNED_CHAR,imageFinal,w*h/size,MPI_UNSIGNED_CHAR,0,MPI_COMM_WORLD);
+	//MPI_Gather(image,w*h/size, MPI_UNSIGNED_CHAR,imageFinal,w*h/size,MPI_UNSIGNED_CHAR,0,MPI_COMM_WORLD);
 
 
 	fprintf(stderr, "\n");
@@ -535,14 +548,16 @@ int main(int argc, char **argv)
 		char nom_rep[30] = "";
 
 		pass = getpwuid(getuid()); 
-		sprintf(nom_rep, "/tmp/%s", pass->pw_name);
+		//sprintf(nom_rep, "/home/sasl/eleves/main/3776597/MAIN4/HPC/Projet/%s", pass->pw_name);
+		sprintf(nom_rep,"/tmp/%s",pass->pw_name);
 		mkdir(nom_rep, S_IRWXU);
 		sprintf(nom_sortie, "%s/image.ppm", nom_rep);
 		
 		FILE *f = fopen(nom_sortie, "w");
 		fprintf(f, "P3\n%d %d\n%d\n", w, h, 255); 
 		for (int i = 0; i < w * h; i++) 
-	  		fprintf(f,"%d %d %d ", toInt(imageFinal[3 * i]), toInt(imageFinal[3 * i + 1]), toInt(imageFinal[3 * i + 2])); 
+	  		//fprintf(f,"%d %d %d ", toInt(imageFinal[3 * i]), toInt(imageFinal[3 * i + 1]), toInt(imageFinal[3 * i + 2]));
+	  		fprintf(f,"%d %d %d ", toInt(image[3 * i]), toInt(image[3 * i + 1]), toInt(image[3 * i + 2])); 
 		fclose(f); 
 
 		free(imageFinal);
