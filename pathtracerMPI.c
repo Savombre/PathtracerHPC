@@ -1,4 +1,4 @@
-/* basé sur on smallpt, a Path Tracer by Kevin Beason, 2008
+y/* basé sur on smallpt, a Path Tracer by Kevin Beason, 2008
  *  	http://www.kevinbeason.com/smallpt/ 
  *
  * Converti en C et modifié par Charles Bouillaguet, 2019
@@ -515,8 +515,10 @@ int main(int argc, char **argv)
 			}
 
 		       // printf("\n pixel_radiance = {%d,%d,%d}\n",pixel_radiance[0],pixel_radiance[1],pixel_radiance[2]); 
-			copy(pixel_radiance, image + 3 * (((h/size) - 1 - (ligneFin-maLigne)) * w + j)); // <-- retournement vertical
-		}
+		 	//copy(pixel_radiance, image + 3 * (((h/size) - 1 - (ligneFin-maLigne)) * w + j)); // <-- retournement vertical
+		       //copy(pixel_radiance,image+3*((maLigne-ligneDebut)*w+j));
+                      // copy(pixel_radiance,image+3*((maLigne-ligneDebut)*w+(w-j))); //Pour inverser entre gauche et droite
+}
 
 		printf("Rank :%d Jusqu'ici tout va bien\n",rank);
 
@@ -551,21 +553,47 @@ int main(int argc, char **argv)
 		//sprintf(nom_rep, "/home/sasl/eleves/main/3776597/MAIN4/HPC/Projet/%s", pass->pw_name);
 		sprintf(nom_rep,"/tmp/%s",pass->pw_name);
 		mkdir(nom_rep, S_IRWXU);
-		sprintf(nom_sortie, "%s/image.ppm", nom_rep);
+		sprintf(nom_sortie, "%s/image0.ppm", nom_rep);
 		
 		FILE *f = fopen(nom_sortie, "w");
 		fprintf(f, "P3\n%d %d\n%d\n", w, h, 255); 
 		for (int i = 0; i < w * h; i++) 
 	  		//fprintf(f,"%d %d %d ", toInt(imageFinal[3 * i]), toInt(imageFinal[3 * i + 1]), toInt(imageFinal[3 * i + 2]));
-	  		fprintf(f,"%d %d %d ", toInt(image[3 * i]), toInt(image[3 * i + 1]), toInt(image[3 * i + 2])); 
+	  		fprintf(f,"%d %d %d ", toInt(image[3 *(w*h/(rank+1)-i)]), toInt(image[3 * (w*h/(rank+1)-i)+1]), toInt(image[3 * (w*h/(rank+1)-i)+2])); 
 		fclose(f); 
 
 		free(imageFinal);
 	}
+
+        if (rank==1){
+
+                printf("\n Enregistrement de l'image \n");
+
+                struct passwd *pass; 
+                char nom_sortie[100] = "";
+                char nom_rep[30] = "";
+
+                pass = getpwuid(getuid()); 
+                //sprintf(nom_rep, "/home/sasl/eleves/main/3776597/MAIN4/HPC/Projet/%s", pass->pw_name);
+                sprintf(nom_rep,"/tmp/%s",pass->pw_name);
+                mkdir(nom_rep, S_IRWXU);
+                sprintf(nom_sortie, "%s/image1.ppm", nom_rep);
+                
+                FILE *f = fopen(nom_sortie, "w");
+                fprintf(f, "P3\n%d %d\n%d\n", w, h, 255); 
+                for (int i = 0; i < w * h; i++) 
+                        //fprintf(f,"%d %d %d ", toInt(imageFinal[3 * i]), toInt(imageFinal[3 * i + 1]), toInt(imageFinal[3 * i + 2]));
+                        fprintf(f,"%d %d %d ", toInt(image[3 *(w*h/(rank+1)-i)]), toInt(image[3 * (w*h/(rank+1)-i)+1]), toInt(image[3 * (w*h/(rank+1)-i)+2])); 
+                fclose(f); 
+
+                free(imageFinal);
+        }
+
 
 	free(image);
 
 
 
 	MPI_Finalize();
+//       return 0;
 }
