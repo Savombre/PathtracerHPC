@@ -446,7 +446,8 @@ int main(int argc, char **argv)
 
 
 	/* boucle principale */
-	double *image = malloc(3 * w * h/size * sizeof(*image));
+	//double *image = malloc(3 * w * h/size * sizeof(*image));
+	double *image = malloc(3 * w * h * sizeof(*image));
 	if (image == NULL) {
 		perror("Impossible d'allouer l'image");
 		exit(1);
@@ -469,7 +470,7 @@ int main(int argc, char **argv)
 
 
 
-if (rank==1){
+if (rank==0){
 
 	for (maLigne= ligneDebut; maLigne < ligneFin; maLigne++) {
 
@@ -518,7 +519,7 @@ if (rank==1){
 		 	//copy(pixel_radiance, image + 3 * (((h/size) - 1 - (ligneFin-maLigne)) * w + j)); // <-- retournement vertical
 		       //copy(pixel_radiance,image+3*((maLigne-ligneDebut)*w+j));
                      // copy(pixel_radiance,image+3*((maLigne-ligneDebut)*w+(w-j))); //Pour inverser entre gauche et droite
-					copy(pixel_radiance,imageFinal+3*((maLigne-ligneDebut)*w+(w-j)));
+					copy(pixel_radiance,image+3*((maLigne-ligneDebut)*w+(w-j)));
 }	
 
 		printf("Rank :%d Jusqu'ici tout va bien\n",rank);
@@ -543,7 +544,7 @@ if (rank==1){
 
 
 	/* stocke l'image dans un fichier au format NetPbm */
-	/*
+	
 	if (rank==0){
 
 		printf("\n Enregistrement de l'image pour %d \n",rank);
@@ -561,16 +562,16 @@ if (rank==1){
 		FILE *f = fopen(nom_sortie, "w");
 		fprintf(f, "P3\n%d %d\n%d\n", w, h, 255); 
 		for (int i = 0; i < w * h; i++) 
-	  		//fprintf(f,"%d %d %d ", toInt(imageFinal[3 * i]), toInt(imageFinal[3 * i + 1]), toInt(imageFinal[3 * i + 2]));
-	  		fprintf(f,"%d %d %d ", toInt(imageFinal[3 *(w*h/(rank+1)-i)]), toInt(imageFinal[3 * (w*h/(rank+1)-i)+1]), toInt(imageFinal[3 * (w*h/(rank+1)-i)+2])); 
+	  		//fprintf(f,"%d %d %d ", toInt(image[3 * i]), toInt(image[3 * i + 1]), toInt(image[3 * i + 2]));
+	  		fprintf(f,"%d %d %d ", toInt(image[3 *(w*h/(rank+1)-i)]), toInt(image[3 * (w*h/(rank+1)-i)+1]), toInt(image[3 * (w*h/(rank+1)-i)+2])); 
 		fclose(f); 
 		
 
 		printf("\n image0.ppm enregistré \n");
 		//free(imageFinal);
-	}*/
+	}
 
-        if (rank==1){
+ /*       if (rank==1){
 
                 printf("\n Enregistrement de l'image pour %d \n",rank);
 
@@ -591,13 +592,13 @@ if (rank==1){
                 for (int i = 0; i < w * h; i++) 
                         //fprintf(g,"%d %d %d ", ligneDebut, ligneDebut, ligneDebut);
 			//fprintf(f,"%d %d %d ", toInt(image[3 * i]), toInt(image[3 * i + 1]), toInt(image[3 * i + 2]));
-                        fprintf(g,"%d %d %d ", toInt(imageFinal[3 *(w*h/(rank+1)-i)]), toInt(imageFinal[3 * (w*h/(rank+1)-i)+1]), toInt(imageFinal[3 * (w*h/(rank+1)-i)+2])); 
+                        fprintf(g,"%d %d %d ", toInt(image[3 *(w*h/(rank+1)-i)]), toInt(image[3 * (w*h/(rank+1)-i)+1]), toInt(image[3 * (w*h/(rank+1)-i)+2])); 
                 fclose(g); 
 
 		printf("\n image1.ppm enregistré \n");
-		
+						
                // free(imageFinal);
-        }
+        }*/
 
 
 	free(image);
