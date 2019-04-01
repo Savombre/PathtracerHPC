@@ -1,4 +1,4 @@
-y/* basé sur on smallpt, a Path Tracer by Kevin Beason, 2008
+/* basé sur on smallpt, a Path Tracer by Kevin Beason, 2008
  *  	http://www.kevinbeason.com/smallpt/ 
  *
  * Converti en C et modifié par Charles Bouillaguet, 2019
@@ -454,7 +454,7 @@ int main(int argc, char **argv)
 
 	double *imageFinal;
 
-	if (rank==0){
+	if (rank==1){
 
 		imageFinal = (double *) malloc(3 * w * h * sizeof(*imageFinal));
 		if (imageFinal == NULL) {
@@ -469,7 +469,7 @@ int main(int argc, char **argv)
 
 
 
-
+if (rank==1){
 
 	for (maLigne= ligneDebut; maLigne < ligneFin; maLigne++) {
 
@@ -517,16 +517,19 @@ int main(int argc, char **argv)
 		       // printf("\n pixel_radiance = {%d,%d,%d}\n",pixel_radiance[0],pixel_radiance[1],pixel_radiance[2]); 
 		 	//copy(pixel_radiance, image + 3 * (((h/size) - 1 - (ligneFin-maLigne)) * w + j)); // <-- retournement vertical
 		       //copy(pixel_radiance,image+3*((maLigne-ligneDebut)*w+j));
-                      // copy(pixel_radiance,image+3*((maLigne-ligneDebut)*w+(w-j))); //Pour inverser entre gauche et droite
-}
+                     // copy(pixel_radiance,image+3*((maLigne-ligneDebut)*w+(w-j))); //Pour inverser entre gauche et droite
+					copy(pixel_radiance,imageFinal+3*((maLigne-ligneDebut)*w+(w-j)));
+}	
 
 		printf("Rank :%d Jusqu'ici tout va bien\n",rank);
 
 		//if (rank==0) printf("%d\n",maLigne);
 	}
 
-	//MPI_Gather(image,w*h/size, MPI_UNSIGNED_CHAR,imageFinal,w*h/size,MPI_UNSIGNED_CHAR,0,MPI_COMM_WORLD);
+}
 
+	//MPI_Gather(image,w*h/size, MPI_UNSIGNED_CHAR,imageFinal,w*h/size,MPI_UNSIGNED_CHAR,0,MPI_COMM_WORLD);
+	//MPI_Gather(image,w*h/size, MPI_UNSIGNED_CHAR,imageFinal,w*h,MPI_UNSIGNED_CHAR,0,MPI_COMM_WORLD);
 
 	fprintf(stderr, "\n");
 
@@ -536,14 +539,14 @@ int main(int argc, char **argv)
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////:
 
 
-
+	printf("\n On va passer à l'enregistrement pour %d \n", rank);
 
 
 	/* stocke l'image dans un fichier au format NetPbm */
-	
+	/*
 	if (rank==0){
 
-		printf("\n Enregistrement de l'image \n");
+		printf("\n Enregistrement de l'image pour %d \n",rank);
 
 		struct passwd *pass; 
 		char nom_sortie[100] = "";
@@ -559,15 +562,17 @@ int main(int argc, char **argv)
 		fprintf(f, "P3\n%d %d\n%d\n", w, h, 255); 
 		for (int i = 0; i < w * h; i++) 
 	  		//fprintf(f,"%d %d %d ", toInt(imageFinal[3 * i]), toInt(imageFinal[3 * i + 1]), toInt(imageFinal[3 * i + 2]));
-	  		fprintf(f,"%d %d %d ", toInt(image[3 *(w*h/(rank+1)-i)]), toInt(image[3 * (w*h/(rank+1)-i)+1]), toInt(image[3 * (w*h/(rank+1)-i)+2])); 
+	  		fprintf(f,"%d %d %d ", toInt(imageFinal[3 *(w*h/(rank+1)-i)]), toInt(imageFinal[3 * (w*h/(rank+1)-i)+1]), toInt(imageFinal[3 * (w*h/(rank+1)-i)+2])); 
 		fclose(f); 
+		
 
-		free(imageFinal);
-	}
+		printf("\n image0.ppm enregistré \n");
+		//free(imageFinal);
+	}*/
 
         if (rank==1){
 
-                printf("\n Enregistrement de l'image \n");
+                printf("\n Enregistrement de l'image pour %d \n",rank);
 
                 struct passwd *pass; 
                 char nom_sortie[100] = "";
@@ -578,15 +583,20 @@ int main(int argc, char **argv)
                 sprintf(nom_rep,"/tmp/%s",pass->pw_name);
                 mkdir(nom_rep, S_IRWXU);
                 sprintf(nom_sortie, "%s/image1.ppm", nom_rep);
-                
-                FILE *f = fopen(nom_sortie, "w");
-                fprintf(f, "P3\n%d %d\n%d\n", w, h, 255); 
+		printf("\n Juste avant l'ouverture de fichier tout va bien \n");                
+                FILE *g = fopen(nom_sortie, "w");
+		printf("\n Là, ça va bien \n");
+                fprintf(g, "P3\n%d %d\n%d\n", w, h, 255); 
+		printf("\n L'enregistrement fonctionne \n");		
                 for (int i = 0; i < w * h; i++) 
-                        //fprintf(f,"%d %d %d ", toInt(imageFinal[3 * i]), toInt(imageFinal[3 * i + 1]), toInt(imageFinal[3 * i + 2]));
-                        fprintf(f,"%d %d %d ", toInt(image[3 *(w*h/(rank+1)-i)]), toInt(image[3 * (w*h/(rank+1)-i)+1]), toInt(image[3 * (w*h/(rank+1)-i)+2])); 
-                fclose(f); 
+                        //fprintf(g,"%d %d %d ", ligneDebut, ligneDebut, ligneDebut);
+			//fprintf(f,"%d %d %d ", toInt(image[3 * i]), toInt(image[3 * i + 1]), toInt(image[3 * i + 2]));
+                        fprintf(g,"%d %d %d ", toInt(imageFinal[3 *(w*h/(rank+1)-i)]), toInt(imageFinal[3 * (w*h/(rank+1)-i)+1]), toInt(imageFinal[3 * (w*h/(rank+1)-i)+2])); 
+                fclose(g); 
 
-                free(imageFinal);
+		printf("\n image1.ppm enregistré \n");
+		
+               // free(imageFinal);
         }
 
 
