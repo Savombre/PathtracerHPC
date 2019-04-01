@@ -446,7 +446,7 @@ int main(int argc, char **argv)
 
 
 	/* boucle principale */
-	//double *image = malloc(3 * w * h/size * sizeof(*image));
+	//double *image = malloc(3 * w * h/size * sizeof(double));
 	double *image = malloc(3 * w * h * sizeof(*image));
 	if (image == NULL) {
 		perror("Impossible d'allouer l'image");
@@ -455,9 +455,9 @@ int main(int argc, char **argv)
 
 	double *imageFinal;
 
-	if (rank==1){
+	if (rank==0){
 
-		imageFinal = (double *) malloc(3 * w * h * sizeof(*imageFinal));
+		imageFinal = (double *) malloc(3 * w * h * sizeof(double));
 		if (imageFinal == NULL) {
 			perror("Impossible d'allouer l'image");
 			exit(1);
@@ -467,10 +467,9 @@ int main(int argc, char **argv)
 	
 			
 
+	int compteur=0;
 
 
-
-if (rank==0){
 
 	for (maLigne= ligneDebut; maLigne < ligneFin; maLigne++) {
 
@@ -518,21 +517,25 @@ if (rank==0){
 		       // printf("\n pixel_radiance = {%d,%d,%d}\n",pixel_radiance[0],pixel_radiance[1],pixel_radiance[2]); 
 		 	//copy(pixel_radiance, image + 3 * (((h/size) - 1 - (ligneFin-maLigne)) * w + j)); // <-- retournement vertical
 		       //copy(pixel_radiance,image+3*((maLigne-ligneDebut)*w+j));
-                     // copy(pixel_radiance,image+3*((maLigne-ligneDebut)*w+(w-j))); //Pour inverser entre gauche et droite
-					copy(pixel_radiance,image+3*((maLigne-ligneDebut)*w+(w-j)));
+            copy(pixel_radiance,image+3*((maLigne-ligneDebut)*w+(w-j))); //Pour inverser entre gauche et droite
+            compteur++;
 }	
 
-		printf("Rank :%d Jusqu'ici tout va bien\n",rank);
+		//printf("Rank :%d Jusqu'ici tout va bien\n",rank);
 
-		//if (rank==0) printf("%d\n",maLigne);
+		printf("Rank:%d ligne:%d \n",rank,maLigne);
 	}
 
-}
+	printf("\nOn va passer au Gather pour rank %d\n",rank);
+	printf("w*h/size=%d\n",w*h/size);
+	printf("compteur=%d\n",3*compteur);
 
-	//MPI_Gather(image,w*h/size, MPI_UNSIGNED_CHAR,imageFinal,w*h/size,MPI_UNSIGNED_CHAR,0,MPI_COMM_WORLD);
+	MPI_Gather(image,3*w*h/size,MPI_DOUBLE,imageFinal,3*w*h/size,MPI_DOUBLE,0,MPI_COMM_WORLD);
 	//MPI_Gather(image,w*h/size, MPI_UNSIGNED_CHAR,imageFinal,w*h,MPI_UNSIGNED_CHAR,0,MPI_COMM_WORLD);
 
 	fprintf(stderr, "\n");
+
+
 
 
 
@@ -563,12 +566,12 @@ if (rank==0){
 		fprintf(f, "P3\n%d %d\n%d\n", w, h, 255); 
 		for (int i = 0; i < w * h; i++) 
 	  		//fprintf(f,"%d %d %d ", toInt(image[3 * i]), toInt(image[3 * i + 1]), toInt(image[3 * i + 2]));
-	  		fprintf(f,"%d %d %d ", toInt(image[3 *(w*h/(rank+1)-i)]), toInt(image[3 * (w*h/(rank+1)-i)+1]), toInt(image[3 * (w*h/(rank+1)-i)+2])); 
+	  		fprintf(f,"%d %d %d ", toInt(imageFinal[3 *(w*h/(rank+1)-i)]), toInt(imageFinal[3 * (w*h/(rank+1)-i)+1]), toInt(imageFinal[3 * (w*h/(rank+1)-i)+2])); 
 		fclose(f); 
 		
 
 		printf("\n image0.ppm enregistré \n");
-		//free(imageFinal);
+		free(imageFinal);
 	}
 
  /*       if (rank==1){
