@@ -1,4 +1,3 @@
-
 /* basé sur on smallpt, a Path Tracer by Kevin Beason, 2008
  *  	http://www.kevinbeason.com/smallpt/ 
  *
@@ -408,7 +407,7 @@ int main(int argc, char **argv)
 
   	printf("\n Rank : %d, ligne Debut=%d, ligneFin=%d \n",rank,ligneDebut,ligneFin);
 
-	
+
 
 
 //////////////////////////////////////////////////////////////////////////////////////
@@ -451,8 +450,8 @@ int main(int argc, char **argv)
 
 	/* boucle principale */
 	//double *image = malloc(3 * w * h/size * sizeof(double));
-	double *block = malloc(3 * w * h * sizeof(*block));
-	if (block == NULL) {
+	double *image = malloc(3 * w * h * sizeof(*image));
+	if (image == NULL) {
 		perror("Impossible d'allouer l'image");
 		exit(1);
 	}
@@ -469,25 +468,14 @@ int main(int argc, char **argv)
 	}
 
 	
-	//METTRE CETTE BOUCLE DANS UNE FONCTION QUE L'ON POURRAIT RAPPELER EN PRECISANT Ligne de Debut et Ligne de Fin
+			
 
 	int compteur=0;
 
-	maLigne=ligneDebut;
 
-	while ( maLigne < ligneFin ) {
-		int travailleurVolontaire=-1;
 
-		MPI_Irecv(travailleurVolontaire,1,MPI_INT,MPI_ANY_SOURCE,0,MPI_COMM_WORLD,request);// Si elle reçoit un message du travailleur qui 
+	for (maLigne= ligneDebut; maLigne < ligneFin; maLigne++) {
 
-		if((travailleurVolontaire>=0) && (maLigne!=ligneFin-1)){ //S'il reçoit un message, alors travailleurVolontaire devient positif, car les rangs sont positifs ,sinon il reste à -1
-			int reponse;
-			MPI_Send(reponse,1,MPI_INT,travailleurVolontaire,0,MPI_COMM_WORLD);
-			int travailAFaire={(ligneFin-maLigne)/2+maLigne,ligneFin};
-			//Pour le nouveau travailleur : {ligneDebut,ligneFin} 
-			ligneFin=(ligneFin-maLigne)/2+maLigne;
-			MPI_Send(travailAFaire,2,MPI_INT,travailleurVolontaire,0,MPI_COMM_WORLD);
-		}
 
 
 
@@ -532,9 +520,8 @@ int main(int argc, char **argv)
 		       // printf("\n pixel_radiance = {%d,%d,%d}\n",pixel_radiance[0],pixel_radiance[1],pixel_radiance[2]); 
 		 	//copy(pixel_radiance, image + 3 * (((h/size) - 1 - (ligneFin-maLigne)) * w + j)); // <-- retournement vertical
 		       //copy(pixel_radiance,image+3*((maLigne-ligneDebut)*w+j));
-            copy(pixel_radiance,block+3*((maLigne-ligneDebut)*w+(w-j))); //Pour inverser entre gauche et droite
+            copy(pixel_radiance,image+3*((maLigne-ligneDebut)*w+(w-j))); //Pour inverser entre gauche et droite
             compteur++;
-		maLigne++
 }	
 
 		//printf("Rank :%d Jusqu'ici tout va bien\n",rank);
@@ -546,34 +533,15 @@ int main(int argc, char **argv)
 	printf("w*h/size=%d\n",w*h/size);
 	printf("compteur=%d\n",3*compteur);
 
-	//FONCTION RECURSIVE A CODER
-
-	int i=0;
-	int reponse=0;
-
-	while((i<size) &&(reponse==0)){
-	
-		if (i=!rank){
-			MPI_Send(rank,1,MPI_INT,i,0,MPI_COMM_WORLD);
-			MPI_Recv(&reponse,1,MPU_INT,i,0,MPI_COMM_WORLD);
-		}
-
-	i++;
-	}
-
-
-
-	//MPI_Igather(image,3*w*h/size,MPI_DOUBLE,imageFinal,3*w*h/size,MPI_DOUBLE,0,MPI_COMM_WORLD,request);
-	MPI_Gather(block,3*w*h/size, MPI_DOUBLE,imageFinal,3*w*h/size,MPI_DOUBLE,0,MPI_COMM_WORLD);
+	MPI_Gather(image,3*w*h/size,MPI_DOUBLE,imageFinal,3*w*h/size,MPI_DOUBLE,0,MPI_COMM_WORLD,request);
+	//MPI_Gather(image,w*h/size, MPI_UNSIGNED_CHAR,imageFinal,w*h,MPI_UNSIGNED_CHAR,0,MPI_COMM_WORLD);
 
 	fprintf(stderr, "\n");
 
 	
-	printf("\n Rank %d  n'est pas bloqué par le Igather\n",rank);
+	
 
 
-
-	//MPI_Wait(request,status);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////:
 
@@ -639,7 +607,7 @@ int main(int argc, char **argv)
         }*/
 
 
-	free(block);
+	free(image);
 
 	
 
