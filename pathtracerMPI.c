@@ -390,8 +390,8 @@ int main(int argc, char **argv)
   	MPI_Comm_rank(MPI_COMM_WORLD,&rank);
   	MPI_Comm_size(MPI_COMM_WORLD,&size);
 
-	MPI_Request *request;
-	MPI_Status *status;
+	MPI_Request request;
+	MPI_Status status;
 
   	int ligneSuivante=size;
 
@@ -400,10 +400,23 @@ int main(int argc, char **argv)
   	int ligneMilieu;
 
   	int ligneDebut,ligneFin;
-
+  	/*
   	ligneDebut=rank*h/size;
   	ligneFin=(rank+1)*h/size;
+	*/
 
+	if (rank==0){
+
+		ligneDebut=0;
+		ligneFin=10;
+	}
+
+	if (rank==1){
+
+		ligneDebut=10;
+		ligneFin=100;
+
+	}
 
 
   	printf("\n Rank : %d, ligne Debut=%d, ligneFin=%d \n",rank,ligneDebut,ligneFin);
@@ -475,18 +488,72 @@ int main(int argc, char **argv)
 
 	maLigne=ligneDebut;
 
+
+	int travailAFaire[2]={0,0};
+
+	printf("Rank %d est rentré dans la première boucle\n",rank);
+
+	int travailleurVolontaire;
+
+	int flag=-1;
+
+	int arretTravail=0;
+
+
 	while ( maLigne < ligneFin ) {
-		int travailleurVolontaire=-1;
 
-		MPI_Irecv(travailleurVolontaire,1,MPI_INT,MPI_ANY_SOURCE,0,MPI_COMM_WORLD,request);// Si elle reçoit un message du travailleur qui 
+		
+		travailleurVolontaire=-1;
 
-		if((travailleurVolontaire>=0) && (maLigne!=ligneFin-1)){ //S'il reçoit un message, alors travailleurVolontaire devient positif, car les rangs sont positifs ,sinon il reste à -1
-			int reponse;
-			MPI_Send(reponse,1,MPI_INT,travailleurVolontaire,0,MPI_COMM_WORLD);
-			int travailAFaire={(ligneFin-maLigne)/2+maLigne,ligneFin};
+		MPI_Iprobe(MPI_ANY_SOURCE,MPI_ANY_TAG,MPI_COMM_WORLD,&flag,&status);
+
+		/*
+		if(flag){
+			printf("On a reçu un message\n");
+		}
+		*/
+
+
+		//MPI_Irecv(&travailleurVolontaire,1,MPI_INT,MPI_ANY_SOURCE,MPI_ANY_TAG,MPI_COMM_WORLD,&request);// Si elle reçoit un message d'un processus libre
+
+		printf("Pour rank %d, travailleurVolontaire=%d\n",rank,travailleurVolontaire);
+
+
+		//printf("\n Rank %d est passé après le Irecv \n",rank);
+
+
+
+		//if((travailleurVolontaire>=0) && (maLigne!=ligneFin-1)){ //S'il reçoit un message, alors travailleurVolontaire devient positif, car les rangs sont positifs ,sinon il reste à -1
+		
+
+		if ((flag==1) && (maLigne!=ligneFin-1)){
+
+			MPI_Recv(&travailleurVolontaire,1,MPI_INT,MPI_ANY_SOURCE,MPI_ANY_TAG,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+
+			printf("\n Rank %d a reçu une proposition de travail de rank %d\n",rank,travailleurVolontaire);
+
+			int reponse=1;
+			MPI_Send(&reponse,1,MPI_INT,travailleurVolontaire,0,MPI_COMM_WORLD);
+
+			printf("Rank %d a répondu à rank %d\n",rank,travailleurVolontaire);
+
+			travailAFaire[0]=(ligneFin-maLigne)/2+maLigne;
+			travailAFaire[1]=ligneFin;
+
+			printf("travailAFaire={%d;%d}\n",travailAFaire[0],travailAFaire[1]);
+
+			//travailAFaire={(ligneFin-maLigne)/2+maLigne,ligneFin};
 			//Pour le nouveau travailleur : {ligneDebut,ligneFin} 
 			ligneFin=(ligneFin-maLigne)/2+maLigne;
+
+			printf("Nouvelle ligne de Fin = %d\n",ligneFin);
+
 			MPI_Send(travailAFaire,2,MPI_INT,travailleurVolontaire,0,MPI_COMM_WORLD);
+		}
+
+		if(maLigne==ligneFin){
+			int reponse=0;
+			MPI_Send(&reponse,1,MPI_INT,travailleurVolontaire,0,MPI_COMM_WORLD);
 		}
 
 
@@ -529,40 +596,204 @@ int main(int argc, char **argv)
 				}
 			}
 
+			
+
+
+
 		       // printf("\n pixel_radiance = {%d,%d,%d}\n",pixel_radiance[0],pixel_radiance[1],pixel_radiance[2]); 
 		 	//copy(pixel_radiance, image + 3 * (((h/size) - 1 - (ligneFin-maLigne)) * w + j)); // <-- retournement vertical
 		       //copy(pixel_radiance,image+3*((maLigne-ligneDebut)*w+j));
             copy(pixel_radiance,block+3*((maLigne-ligneDebut)*w+(w-j))); //Pour inverser entre gauche et droite
             compteur++;
-		maLigne++
-}	
+	}	
+
+	//printf("\n Dans ce tour de boucle, Rank : %d, maLigne=%d, ligne Debut=%d, ligneFin=%d \n",rank,maLigne,ligneDebut,ligneFin);
+
+	maLigne++;
 
 		//printf("Rank :%d Jusqu'ici tout va bien\n",rank);
 
 		printf("Rank:%d ligne:%d \n",rank,maLigne);
 	}
 
-	printf("\nOn va passer au Gather pour rank %d\n",rank);
-	printf("w*h/size=%d\n",w*h/size);
-	printf("compteur=%d\n",3*compteur);
+
+	printf("Rank %d est sorti de la première boucle\n",rank);
+
+	
+	//printf("w*h/size=%d\n",w*h/size);
+	//printf("compteur=%d\n",3*compteur);
 
 	//FONCTION RECURSIVE A CODER
 
-	int i=0;
+	int i=-1;
 	int reponse=0;
 
-	while((i<size) &&(reponse==0)){
+	while((i<size) &&(reponse==0) && (arretTravail==0)){
+		i++;
 	
-		if (i=!rank){
-			MPI_Send(rank,1,MPI_INT,i,0,MPI_COMM_WORLD);
-			MPI_Recv(&reponse,1,MPU_INT,i,0,MPI_COMM_WORLD);
-		}
+		printf("Rank %d demande du travail à %d\n",rank,i);
 
-	i++;
+		if (i!=rank){
+
+
+
+			printf("On est bien rentré dans le if\n");
+			MPI_Send(&rank,1,MPI_INT,i,0,MPI_COMM_WORLD);
+			printf("La demande de rank %d a bien été reçue\n ",rank);
+
+
+			MPI_Recv(&reponse,1,MPI_INT,i,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+			printf("On a répondu à la demande de travail de rank %d\n",rank);
+		}
+		//personne n'a de travail a nous envoyer, le programme est donc fini
+		// il ne reste qu'à rassembler l'image
 	}
 
+	printf("Rank %d arrête de demander du travail\n",rank);
 
 
+
+	//Reception du travail
+
+	if (reponse==1){
+
+		MPI_Recv(travailAFaire,2,MPI_INT,i,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+	} 
+
+
+
+	//Exécution du travail
+
+	//Si le travail a bien été reçu, c'est une sécurité au cas où la communication n'aurait pas fonctionné
+	if (travailAFaire[1]!=0 && (reponse==1) && arretTravail==0){
+
+		printf("Rank %d se met à son nouveau travail\n",rank);
+
+		maLigne=travailAFaire[0];
+		ligneDebut=travailAFaire[0];
+		ligneFin=travailAFaire[1];
+
+
+		while ( maLigne < ligneFin ) {
+
+			MPI_Iprobe(MPI_ANY_SOURCE,MPI_ANY_TAG,MPI_COMM_WORLD,&flag,&status);
+		
+
+			if ((flag==1)){  
+
+				MPI_Recv(&travailleurVolontaire,1,MPI_INT,MPI_ANY_SOURCE,MPI_ANY_TAG,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+
+
+				printf("Rank %d a reçu un message\n",rank);
+
+				reponse=0;
+				MPI_Send(&reponse,1,MPI_INT,travailleurVolontaire,0,MPI_COMM_WORLD);
+
+				printf("Rank %d a envoyé sa réponse\n",rank);
+
+			/*
+
+			MPI_Recv(&travailleurVolontaire,1,MPI_INT,MPI_ANY_SOURCE,MPI_ANY_TAG,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+
+			printf("\n Rank %d a reçu une proposition de travail de rank %d\n",rank,travailleurVolontaire);
+
+			int reponse=1;
+			MPI_Send(&reponse,1,MPI_INT,travailleurVolontaire,0,MPI_COMM_WORLD);
+
+			printf("Rank %d a répondu à rank %d\n",rank,travailleurVolontaire);
+
+			travailAFaire[0]=(ligneFin-maLigne)/2+maLigne;
+			travailAFaire[1]=ligneFin;
+
+			printf("travailAFaire={%d;%d}\n",travailAFaire[0],travailAFaire[1]);
+
+			//travailAFaire={(ligneFin-maLigne)/2+maLigne,ligneFin};
+			//Pour le nouveau travailleur : {ligneDebut,ligneFin} 
+			ligneFin=(ligneFin-maLigne)/2+maLigne;
+
+			printf("Nouvelle ligne de Fin = %d\n",ligneFin);
+
+			MPI_Send(travailAFaire,2,MPI_INT,travailleurVolontaire,0,MPI_COMM_WORLD);  */
+		}
+
+		if(maLigne==ligneFin){
+			reponse=0;
+			MPI_Send(&reponse,1,MPI_INT,travailleurVolontaire,0,MPI_COMM_WORLD);
+		}
+
+
+
+ 			unsigned short PRNG_state[3] = {0, 0, maLigne*maLigne*maLigne};
+
+
+			for (unsigned short j = 0; j < w; j++) {
+				/* calcule la luminance d'un pixel, avec sur-échantillonnage 2x2 */
+				double pixel_radiance[3] = {0, 0, 0};
+				for (int sub_i = 0; sub_i < 2; sub_i++) {
+					for (int sub_j = 0; sub_j < 2; sub_j++) {
+						double subpixel_radiance[3] = {0, 0, 0};
+						/* simulation de monte-carlo : on effectue plein de lancers de rayons et on moyenne */
+						for (int s = 0; s < samples; s++) { 
+							/* tire un rayon aléatoire dans une zone de la caméra qui correspond à peu près au pixel à calculer */
+							double r1 = 2 * erand48(PRNG_state);
+							double dx = (r1 < 1) ? sqrt(r1) - 1 : 1 - sqrt(2 - r1); 
+							double r2 = 2 * erand48(PRNG_state);
+							double dy = (r2 < 1) ? sqrt(r2) - 1 : 1 - sqrt(2 - r2);
+							double ray_direction[3];
+							copy(camera_direction, ray_direction);
+							axpy(((sub_i + .5 + dy) / 2 + maLigne) / h - .5, cy, ray_direction);
+							axpy(((sub_j + .5 + dx) / 2 + j) / w - .5, cx, ray_direction);
+							normalize(ray_direction);
+
+							double ray_origin[3];
+							copy(camera_position, ray_origin);
+							axpy(140, ray_direction, ray_origin);
+
+							/* estime la lumiance qui arrive sur la caméra par ce rayon */
+							double sample_radiance[3];
+							radiance(ray_origin, ray_direction, 0, PRNG_state, sample_radiance);
+							/* fait la moyenne sur tous les rayons */
+							axpy(1. / samples, sample_radiance, subpixel_radiance);
+						}
+						clamp(subpixel_radiance);
+						/* fait la moyenne sur les 4 sous-pixels */
+						axpy(0.25, subpixel_radiance, pixel_radiance);
+					}
+				}
+
+				copy(pixel_radiance,block+3*((maLigne-ligneDebut)*w+(w-j))); //Pour inverser entre gauche et droite
+
+
+			}
+
+			printf("Rank:%d ligne:%d \n",rank,maLigne);
+			maLigne++;
+
+
+		}
+
+	}
+
+	//MPI_Irecv(&travailleurVolontaire,1,MPI_INT,MPI_ANY_SOURCE,MPI_ANY_TAG,MPI_COMM_WORLD,&request);
+
+	//MPI_Isend(&reponse,1,MPI_INT,travailleurVolontaire,0,MPI_COMM_WORLD,&request);
+
+
+	//Il n'y a plus de travail à faire
+
+	arretTravail=1;
+	MPI_Bcast(&arretTravail,1,MPI_INT,0,MPI_COMM_WORLD);
+
+	
+
+	printf("\nOn va passer au Gather pour rank %d\n",rank);
+
+
+	/*
+	reponse=0;
+	int travailleurVolontaire;
+	MPI_Irecv(travailleurVolontaire,MPI_INT,0,MPI_ANY_SOURCE,MPI_COMM_WORLD,resquest);
+	MPI_Isend(reponse,1,MPI_INT,travailleurVolontaire,0,MPI_COMM_WORLD,resquest);*/
 	//MPI_Igather(image,3*w*h/size,MPI_DOUBLE,imageFinal,3*w*h/size,MPI_DOUBLE,0,MPI_COMM_WORLD,request);
 	MPI_Gather(block,3*w*h/size, MPI_DOUBLE,imageFinal,3*w*h/size,MPI_DOUBLE,0,MPI_COMM_WORLD);
 
