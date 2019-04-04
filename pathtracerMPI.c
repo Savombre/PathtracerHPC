@@ -500,10 +500,12 @@ int main(int argc, char **argv)
 	int arretTravail=0;
 
 
+	travailleurVolontaire=-1;
+
 	while ( maLigne < ligneFin ) {
 
 		
-		travailleurVolontaire=-1;
+		//travailleurVolontaire=-1;
 
 		MPI_Iprobe(MPI_ANY_SOURCE,MPI_ANY_TAG,MPI_COMM_WORLD,&flag,&status);
 
@@ -617,6 +619,22 @@ int main(int argc, char **argv)
 	}
 
 
+	//Si le processus a été aidé par un travailleur
+	if (travailleurVolontaire!=-1){
+
+		//Il doit rassembler les différents codes
+
+
+		printf("Rank %d va reçevoir le travail effectué par rank %d\n",rank,travailleurVolontaire);
+
+		//MPI_Recv(block+3*w*ligneFin,3*w*(travailAFaire[1]-travailAFaire[0]),MPI_DOUBLE,travailleurVolontaire,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+
+		MPI_Recv(block,3*w*(travailAFaire[1]-travailAFaire[0]),MPI_DOUBLE,travailleurVolontaire,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+		printf("Rank %d a reçu le travail effectué par rank %d\n",rank,travailleurVolontaire);
+
+	}
+
+
 	printf("Rank %d est sorti de la première boucle\n",rank);
 
 	
@@ -625,24 +643,24 @@ int main(int argc, char **argv)
 
 	//FONCTION RECURSIVE A CODER
 
-	int i=-1;
+	int contact=-1; //Numéro du processus que l'on contacte
 	int reponse=0;
 
-	while((i<size) &&(reponse==0) && (arretTravail==0)){
-		i++;
+	while((contact<size-1) &&(reponse==0) && (arretTravail==0)){
+		contact++;
 	
-		printf("Rank %d demande du travail à %d\n",rank,i);
+		printf("Rank %d demande du travail à %d\n",rank,contact);
 
-		if (i!=rank){
+		if (contact!=rank){
 
 
 
 			printf("On est bien rentré dans le if\n");
-			MPI_Send(&rank,1,MPI_INT,i,0,MPI_COMM_WORLD);
+			MPI_Send(&rank,1,MPI_INT,contact,0,MPI_COMM_WORLD);
 			printf("La demande de rank %d a bien été reçue\n ",rank);
 
 
-			MPI_Recv(&reponse,1,MPI_INT,i,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+			MPI_Recv(&reponse,1,MPI_INT,contact,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
 			printf("On a répondu à la demande de travail de rank %d\n",rank);
 		}
 		//personne n'a de travail a nous envoyer, le programme est donc fini
@@ -655,9 +673,11 @@ int main(int argc, char **argv)
 
 	//Reception du travail
 
+
+
 	if (reponse==1){
 
-		MPI_Recv(travailAFaire,2,MPI_INT,i,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+		MPI_Recv(travailAFaire,2,MPI_INT,contact,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
 	} 
 
 
@@ -672,6 +692,14 @@ int main(int argc, char **argv)
 		maLigne=travailAFaire[0];
 		ligneDebut=travailAFaire[0];
 		ligneFin=travailAFaire[1];
+
+		double *blockAEnvoyer = malloc(3 * w * h * sizeof(*block));
+	if (block == NULL) {
+		perror("Impossible d'allouer l'image");
+		exit(1);
+	}
+
+
 
 
 		while ( maLigne < ligneFin ) {
@@ -761,7 +789,7 @@ int main(int argc, char **argv)
 					}
 				}
 
-				copy(pixel_radiance,block+3*((maLigne-ligneDebut)*w+(w-j))); //Pour inverser entre gauche et droite
+				copy(pixel_radiance,blockAEnvoyer+3*((maLigne-ligneDebut)*w+(w-j))); //Pour inverser entre gauche et droite
 
 
 			}
@@ -772,7 +800,17 @@ int main(int argc, char **argv)
 
 		}
 
+		//ENVOI DU TRAVAIL FAIT
+		printf("Rank %d va envoyer le travail fait à rank %d \n",rank,contact);
+
+		//MPI_Send(blockAEnvoyer+3*w*ligneDebut,3*w*(ligneFin-ligneDebut),MPI_DOUBLE,contact,0,MPI_COMM_WORLD);
+		MPI_Send(blockAEnvoyer,3*w*(ligneFin-ligneDebut),MPI_DOUBLE,contact,0,MPI_COMM_WORLD);
+
+		printf("Rank %d a envoyé le travail qu'il a fait pour rank %d\n",rank,contact);
+
 	}
+
+
 
 	//MPI_Irecv(&travailleurVolontaire,1,MPI_INT,MPI_ANY_SOURCE,MPI_ANY_TAG,MPI_COMM_WORLD,&request);
 
@@ -782,9 +820,40 @@ int main(int argc, char **argv)
 	//Il n'y a plus de travail à faire
 
 	arretTravail=1;
-	MPI_Bcast(&arretTravail,1,MPI_INT,0,MPI_COMM_WORLD);
+	//MPI_Bcast(&arretTravail,1,MPI_INT,0,MPI_COMM_WORLD);
+
+
+
 
 	
+
+	
+
+	flag=0;
+
+	//S'il s'agit d'un processus qui a travaillé, alors reponse==1
+	//Il doit alors prévenir les autres, qu'il n'y a plus de travail à faire
+
+	if (reponse==1){
+
+		printf("Rank %d va rentrer dans la boucle flag\n",rank);
+
+		while(flag==0){
+
+
+
+			MPI_Iprobe(MPI_ANY_SOURCE,MPI_ANY_TAG,MPI_COMM_WORLD,&flag,&status);
+
+		}
+
+		printf("Rank %d est sorti de la boucle flag car flag=%d \n",rank,flag);
+
+		//MPI_Test(&request, &flag, &status);
+
+		reponse=0;
+
+		MPI_Send(&reponse,1,MPI_INT,status.MPI_SOURCE,0,MPI_COMM_WORLD);
+	}
 
 	printf("\nOn va passer au Gather pour rank %d\n",rank);
 
@@ -795,12 +864,13 @@ int main(int argc, char **argv)
 	MPI_Irecv(travailleurVolontaire,MPI_INT,0,MPI_ANY_SOURCE,MPI_COMM_WORLD,resquest);
 	MPI_Isend(reponse,1,MPI_INT,travailleurVolontaire,0,MPI_COMM_WORLD,resquest);*/
 	//MPI_Igather(image,3*w*h/size,MPI_DOUBLE,imageFinal,3*w*h/size,MPI_DOUBLE,0,MPI_COMM_WORLD,request);
+	
 	MPI_Gather(block,3*w*h/size, MPI_DOUBLE,imageFinal,3*w*h/size,MPI_DOUBLE,0,MPI_COMM_WORLD);
 
 	fprintf(stderr, "\n");
 
 	
-	printf("\n Rank %d  n'est pas bloqué par le Igather\n",rank);
+	//printf("\n Rank %d  n'est pas bloqué par le Igather\n",rank);
 
 
 
