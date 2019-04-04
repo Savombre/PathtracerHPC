@@ -539,14 +539,23 @@ int main(int argc, char **argv)
 
 			printf("Rank %d a répondu à rank %d\n",rank,travailleurVolontaire);
 
+
+			
 			travailAFaire[0]=(ligneFin-maLigne)/2+maLigne;
 			travailAFaire[1]=ligneFin;
+			
+			
+			//travailAFaire[0]=maLigne;
+			//travailAFaire[1]=(ligneFin-maLigne)/2+maLigne;
+	
 
 			printf("travailAFaire={%d;%d}\n",travailAFaire[0],travailAFaire[1]);
 
 			//travailAFaire={(ligneFin-maLigne)/2+maLigne,ligneFin};
 			//Pour le nouveau travailleur : {ligneDebut,ligneFin} 
 			ligneFin=(ligneFin-maLigne)/2+maLigne;
+
+			//maLigne=(ligneFin-maLigne)/2+maLigne;
 
 			printf("Nouvelle ligne de Fin = %d\n",ligneFin);
 
@@ -611,11 +620,11 @@ int main(int argc, char **argv)
 
 	//printf("\n Dans ce tour de boucle, Rank : %d, maLigne=%d, ligne Debut=%d, ligneFin=%d \n",rank,maLigne,ligneDebut,ligneFin);
 
-	maLigne++;
-
 		//printf("Rank :%d Jusqu'ici tout va bien\n",rank);
 
 		printf("Rank:%d ligne:%d \n",rank,maLigne);
+
+		maLigne++;
 	}
 
 
@@ -627,9 +636,11 @@ int main(int argc, char **argv)
 
 		printf("Rank %d va reçevoir le travail effectué par rank %d\n",rank,travailleurVolontaire);
 
-		//MPI_Recv(block+3*w*ligneFin,3*w*(travailAFaire[1]-travailAFaire[0]),MPI_DOUBLE,travailleurVolontaire,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+		MPI_Recv(block+3*w*ligneDebut,3*w*(travailAFaire[1]-travailAFaire[0]),MPI_DOUBLE,travailleurVolontaire,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
 
-		MPI_Recv(block,3*w*(travailAFaire[1]-travailAFaire[0]),MPI_DOUBLE,travailleurVolontaire,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+		//Bon Recv : 
+		//MPI_Recv(block,3*w*(travailAFaire[1]-travailAFaire[0]),MPI_DOUBLE,travailleurVolontaire,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+		
 		printf("Rank %d a reçu le travail effectué par rank %d\n",rank,travailleurVolontaire);
 
 	}
@@ -693,11 +704,13 @@ int main(int argc, char **argv)
 		ligneDebut=travailAFaire[0];
 		ligneFin=travailAFaire[1];
 
-		double *blockAEnvoyer = malloc(3 * w * h * sizeof(*block));
-	if (block == NULL) {
-		perror("Impossible d'allouer l'image");
-		exit(1);
-	}
+		
+
+		double *blockAEnvoyer = malloc(3 * w * h * sizeof(double));
+		if (block == NULL) {
+			perror("Impossible d'allouer l'image");
+			exit(1);
+		}
 
 
 
@@ -787,9 +800,13 @@ int main(int argc, char **argv)
 						/* fait la moyenne sur les 4 sous-pixels */
 						axpy(0.25, subpixel_radiance, pixel_radiance);
 					}
+
 				}
 
 				copy(pixel_radiance,blockAEnvoyer+3*((maLigne-ligneDebut)*w+(w-j))); //Pour inverser entre gauche et droite
+				//copy(pixel_radiance,block+3*((maLigne-ligneDebut)*w+(w-j))); //Pour inverser entre gauche et droite
+				//copy(pixel_radiance,blockAEnvoyer+(w-j));
+
 
 
 			}
@@ -804,9 +821,17 @@ int main(int argc, char **argv)
 		printf("Rank %d va envoyer le travail fait à rank %d \n",rank,contact);
 
 		//MPI_Send(blockAEnvoyer+3*w*ligneDebut,3*w*(ligneFin-ligneDebut),MPI_DOUBLE,contact,0,MPI_COMM_WORLD);
+		
+
+		//Bon Send : 
 		MPI_Send(blockAEnvoyer,3*w*(ligneFin-ligneDebut),MPI_DOUBLE,contact,0,MPI_COMM_WORLD);
+		
+
+		//MPI_Send(block,3*w*(ligneFin-ligneDebut),MPI_DOUBLE,contact,0,MPI_COMM_WORLD);
 
 		printf("Rank %d a envoyé le travail qu'il a fait pour rank %d\n",rank,contact);
+
+		free(blockAEnvoyer);
 
 	}
 
@@ -865,7 +890,7 @@ int main(int argc, char **argv)
 	MPI_Isend(reponse,1,MPI_INT,travailleurVolontaire,0,MPI_COMM_WORLD,resquest);*/
 	//MPI_Igather(image,3*w*h/size,MPI_DOUBLE,imageFinal,3*w*h/size,MPI_DOUBLE,0,MPI_COMM_WORLD,request);
 	
-	MPI_Gather(block,3*w*h/size, MPI_DOUBLE,imageFinal,3*w*h/size,MPI_DOUBLE,0,MPI_COMM_WORLD);
+	//MPI_Gather(block,3*w*h/size, MPI_DOUBLE,imageFinal,3*w*h/size,MPI_DOUBLE,0,MPI_COMM_WORLD);
 
 	fprintf(stderr, "\n");
 
@@ -883,7 +908,7 @@ int main(int argc, char **argv)
 
 
 	/* stocke l'image dans un fichier au format NetPbm */
-	
+
 	if (rank==0){
 
 		printf("\n Enregistrement de l'image pour %d \n",rank);
@@ -902,15 +927,35 @@ int main(int argc, char **argv)
 		fprintf(f, "P3\n%d %d\n%d\n", w, h, 255); 
 		for (int i = 0; i < w * h; i++) 
 	  		//fprintf(f,"%d %d %d ", toInt(image[3 * i]), toInt(image[3 * i + 1]), toInt(image[3 * i + 2]));
-	  		fprintf(f,"%d %d %d ", toInt(imageFinal[3 *(w*h/(rank+1)-i)]), toInt(imageFinal[3 * (w*h/(rank+1)-i)+1]), toInt(imageFinal[3 * (w*h/(rank+1)-i)+2])); 
+	  		//fprintf(f,"%d %d %d ", toInt(imageFinal[3 *(w*h/(rank+1)-i)]), toInt(imageFinal[3 * (w*h/(rank+1)-i)+1]), toInt(imageFinal[3 * (w*h/(rank+1)-i)+2]));
+	  		fprintf(f,"%d %d %d ", toInt(block[3 *(w*h/(rank+1)-i)]), toInt(block[3 * (w*h/(rank+1)-i)+1]), toInt(block[3 * (w*h/(rank+1)-i)+2]));  
 		fclose(f); 
 		
 
 		printf("\n image0.ppm enregistré \n");
 		free(imageFinal);
+/*
+		sprintf(nom_sortie, "%s/image0Envoi.ppm", nom_rep);
+		
+		FILE *a = fopen(nom_sortie, "w");
+		fprintf(a, "P3\n%d %d\n%d\n", w, h, 255); 
+		for (int i = 0; i < w * h; i++) 
+	  		//fprintf(f,"%d %d %d ", toInt(image[3 * i]), toInt(image[3 * i + 1]), toInt(image[3 * i + 2]));
+	  		//fprintf(f,"%d %d %d ", toInt(imageFinal[3 *(w*h/(rank+1)-i)]), toInt(imageFinal[3 * (w*h/(rank+1)-i)+1]), toInt(imageFinal[3 * (w*h/(rank+1)-i)+2]));
+	  		fprintf(a,"%d %d %d ", toInt(blockAEnvoyer[3 *(w*h/(rank+1)-i)]), toInt(blockAEnvoyer[3 * (w*h/(rank+1)-i)+1]), toInt(blockAEnvoyer[3 * (w*h/(rank+1)-i)+2]));  
+		fclose(a); 
+		
+
+		printf("\n image0Envoi.ppm enregistré \n");
+
+		free(blockAEnvoyer);*/
+
+
 	}
 
- /*       if (rank==1){
+
+
+      if (rank==1){
 
                 printf("\n Enregistrement de l'image pour %d \n",rank);
 
@@ -931,13 +976,13 @@ int main(int argc, char **argv)
                 for (int i = 0; i < w * h; i++) 
                         //fprintf(g,"%d %d %d ", ligneDebut, ligneDebut, ligneDebut);
 			//fprintf(f,"%d %d %d ", toInt(image[3 * i]), toInt(image[3 * i + 1]), toInt(image[3 * i + 2]));
-                        fprintf(g,"%d %d %d ", toInt(image[3 *(w*h/(rank+1)-i)]), toInt(image[3 * (w*h/(rank+1)-i)+1]), toInt(image[3 * (w*h/(rank+1)-i)+2])); 
+                        fprintf(g,"%d %d %d ", toInt(block[3 *(w*h/(rank+1)-i)]), toInt(block[3 * (w*h/(rank+1)-i)+1]), toInt(block[3 * (w*h/(rank+1)-i)+2])); 
                 fclose(g); 
 
 		printf("\n image1.ppm enregistré \n");
 						
                // free(imageFinal);
-        }*/
+        }
 
 
 	free(block);
