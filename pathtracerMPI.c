@@ -408,12 +408,12 @@ int main(int argc, char **argv)
 	if (rank==0){
 
 		ligneDebut=0;
-		ligneFin=50;
+		ligneFin=10;
 	}
 
 	if (rank==1){
 
-		ligneDebut=50;
+		ligneDebut=10;
 		ligneFin=100;
 
 	}
@@ -464,11 +464,15 @@ int main(int argc, char **argv)
 
 	/* boucle principale */
 	//double *image = malloc(3 * w * h/size * sizeof(double));
-	double *block = malloc(3 * w * h * sizeof(*block));
+	double *block,*pblock;
+
+	pblock= block =(double *) malloc(3 * w * h * sizeof(double));
 	if (block == NULL) {
 		perror("Impossible d'allouer l'image");
 		exit(1);
 	}
+
+
 
 	double *imageFinal;
 
@@ -531,7 +535,7 @@ int main(int argc, char **argv)
 		//if((travailleurVolontaire>=0) && (maLigne!=ligneFin-1)){ //S'il reçoit un message, alors travailleurVolontaire devient positif, car les rangs sont positifs ,sinon il reste à -1
 		
 
-		if ((flag==1) && (maLigne<=ligneFin-20)){
+		if ((flag==1) && (maLigne<=ligneFin-5)){
 
 			MPI_Recv(&message,3,MPI_CHAR,MPI_ANY_SOURCE,MPI_ANY_TAG,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
 
@@ -568,7 +572,7 @@ int main(int argc, char **argv)
 			MPI_Send(travailAFaire,3,MPI_INT,travailleurVolontaire,0,MPI_COMM_WORLD);
 		}
 
-		else if((flag==1) && (maLigne>ligneFin-20)){
+		else if((flag==1) && (maLigne>ligneFin-5)){
 			reponse=0;
 			MPI_Send(&reponse,1,MPI_INT,travailleurVolontaire,0,MPI_COMM_WORLD);
 		}
@@ -621,7 +625,7 @@ int main(int argc, char **argv)
 		 	//copy(pixel_radiance, image + 3 * (((h/size) - 1 - (ligneFin-maLigne)) * w + j)); // <-- retournement vertical
 		       //copy(pixel_radiance,image+3*((maLigne-ligneDebut)*w+j));
             //copy(pixel_radiance,block+3*((maLigne-ligneDebut)*w+(w-j))); //Pour inverser entre gauche et droite
-            copy(pixel_radiance,block+3*((maLigne-ligneDebut)*w+(w-j)));
+            copy(pixel_radiance,pblock+3*((maLigne-ligneDebut)*w+(w-j)));
             compteur++;
 	}	
 
@@ -634,21 +638,26 @@ int main(int argc, char **argv)
 		maLigne++;
 	}
 
-
+	
 
 	//Si le processus a été aidé par un travailleur
 	if (travailleurVolontaire!=-1){
 
 		//Il doit rassembler les différents codes
 
-
+		double *blockAEnvoyer = malloc(3 * w * h * sizeof(double));
+                if (block == NULL) {
+                        perror("Impossible d'allouer l'image");
+                        exit(1);
+                }
 
 
 		printf("Rank %d va reçevoir le travail effectué par rank %d\n",rank,travailleurVolontaire);
 
 
 		//Meilleur Recv (met l'image bien en haut)
-		MPI_Recv(block+3*w*ligneDebut,3*w*(travailAFaire[1]-travailAFaire[0]),MPI_DOUBLE,travailleurVolontaire,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+		//MPI_Recv(block+3*w*ligneDebut,3*w*(travailAFaire[1]-travailAFaire[0]),MPI_DOUBLE,travailleurVolontaire,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+		MPI_Recv(blockAEnvoyer+3*w*ligneDebut,3*w*(travailAFaire[1]-travailAFaire[0]),MPI_DOUBLE,travailleurVolontaire,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
 
 		//Bon Recv : 
 		//MPI_Recv(block,3*w*(travailAFaire[1]-travailAFaire[0]),MPI_DOUBLE,travailleurVolontaire,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
@@ -658,6 +667,12 @@ int main(int argc, char **argv)
 
 		
 		printf("Rank %d a reçu le travail effectué par rank %d\n",rank,travailleurVolontaire);
+
+
+
+		MPI_Send(blockAEnvoyer,3*w*(travailAFaire[1]-travailAFaire[0]),MPI_DOUBLE,travailleurVolontaire,0,MPI_COMM_WORLD);
+
+
 
 	}
 
@@ -733,7 +748,9 @@ int main(int argc, char **argv)
 		}
 
 
-
+//		*blockAEnvoyer= *blockAEnvoyer + 3*w*travailAFaire[0];
+//		*pblock=*pblock+3*w*travailAFaire[1];
+//		pblock=block;
 
 		while ( maLigne < ligneFin ) {
 
@@ -826,7 +843,7 @@ int main(int argc, char **argv)
 				}
 
 				copy(pixel_radiance,blockAEnvoyer+3*((maLigne-ligneDebut)*w+(w-j))); //Pour inverser entre gauche et droite
-				//copy(pixel_radiance,block+3*((maLigne-ligneDebut)*w+(w-j))); //Pour inverser entre gauche et droite
+				//copy(pixel_radiance,pblock+3*((maLigne-ligneDebut)*w+(w-j))); //Pour inverser entre gauche et droite
 				//copy(pixel_radiance,blockAEnvoyer+(w-j));
 
 
@@ -859,6 +876,16 @@ int main(int argc, char **argv)
 
 		free(blockAEnvoyer);
 
+
+
+
+		MPI_Recv(block+3*w*ligneDebut,3*w*(travailAFaire[1]-travailAFaire[0]),MPI_DOUBLE,travailleurVolontaire,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+
+		//MPI_Recv(block+3*w*ligneFin,3*w*(travailA
+
+
+
+	
 	}
 
 
@@ -953,8 +980,8 @@ int main(int argc, char **argv)
 		fprintf(f, "P3\n%d %d\n%d\n", w, h, 255); 
 		for (int i = 0; i < w * h; i++) 
 	  		//fprintf(f,"%d %d %d ", toInt(image[3 * i]), toInt(image[3 * i + 1]), toInt(image[3 * i + 2]));
-	  		fprintf(f,"%d %d %d ", toInt(imageFinal[3 *(w*h/(rank+1)-i)]), toInt(imageFinal[3 * (w*h/(rank+1)-i)+1]), toInt(imageFinal[3 * (w*h/(rank+1)-i)+2]));
-//	  		fprintf(f,"%d %d %d ", toInt(block[3 *(w*h/(rank+1)-i)]), toInt(block[3 * (w*h/(rank+1)-i)+1]), toInt(block[3 * (w*h/(rank+1)-i)+2]));  
+//	  		fprintf(f,"%d %d %d ", toInt(imageFinal[3 *(w*h/(rank+1)-i)]), toInt(imageFinal[3 * (w*h/(rank+1)-i)+1]), toInt(imageFinal[3 * (w*h/(rank+1)-i)+2]));
+	  		fprintf(f,"%d %d %d ", toInt(block[3 *(w*h/(rank+1)-i)]), toInt(block[3 * (w*h/(rank+1)-i)+1]), toInt(block[3 * (w*h/(rank+1)-i)+2]));  
 		fclose(f); 
 		
 
@@ -962,6 +989,23 @@ int main(int argc, char **argv)
 		
 		
 		printf("\n image0.ppm enregistré \n");
+
+
+		sprintf(nom_rep,"/tmp/%s",pass->pw_name);
+                mkdir(nom_rep, S_IRWXU);
+                sprintf(nom_sortie, "%s/imageFinal.ppm", nom_rep);
+                
+                FILE *ff = fopen(nom_sortie, "w");
+                fprintf(ff, "P3\n%d %d\n%d\n", w, h, 255); 
+                for (int i = 0; i < w * h; i++) 
+                        //fprintf(f,"%d %d %d ", toInt(image[3 * i]), toInt(image[3 * i + 1]), toInt(image[3 * i + 2]));
+                      fprintf(ff,"%d %d %d ", toInt(imageFinal[3 *(w*h/(rank+1)-i)]), toInt(imageFinal[3 * (w*h/(rank+1)-i)+1]), toInt(imageFinal[3 * (w*h/(rank+1)-i)+2]));
+//                        fprintf(f,"%d %d %d ", toInt(block[3 *(w*h/(rank+1)-i)]), toInt(block[3 * (w*h/(rank+1)-i)+1]), toInt(block[3 * (w*h/(rank+1)-i)+2]));  
+                fclose(ff); 
+
+
+		printf("\n imageFinal.ppm enregistré \n");
+
 		free(imageFinal);
 /*
 		sprintf(nom_sortie, "%s/image0Envoi.ppm", nom_rep);
