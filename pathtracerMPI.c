@@ -466,7 +466,9 @@ int main(int argc, char **argv)
 	//double *image = malloc(3 * w * h/size * sizeof(double));
 	double *block,*pblock;
 
+	//pblock= block =(double *) malloc(3 * w * (h/size) * sizeof(double));
 	pblock= block =(double *) malloc(3 * w * h * sizeof(double));
+	//pblock= block =(double *) malloc(3 * w * (ligneFin-ligneDebut+1) * sizeof(double));
 	if (block == NULL) {
 		perror("Impossible d'allouer l'image");
 		exit(1);
@@ -493,7 +495,7 @@ int main(int argc, char **argv)
 	maLigne=ligneDebut;
 
 
-	int travailAFaire[3]={0,0,0};
+	int travailAFaire[4]={0,0,0,0};
 
 	printf("Rank %d est rentré dans la première boucle\n",rank);
 
@@ -553,7 +555,7 @@ int main(int argc, char **argv)
 			travailAFaire[0]=(ligneFin-maLigne)/2+maLigne;
 			travailAFaire[1]=ligneFin;
 			travailAFaire[2]=ligneFin-ligneDebut; //On aura besoin pour envoyer à l'autre processus afin qu'il reconstitue une bonne image
-			
+			travailAFaire[3]=travailAFaire[0]-ligneDebut; //Taile de ce que ce processus aura calculé en tout
 			
 			//travailAFaire[0]=maLigne;
 			//travailAFaire[1]=(ligneFin-maLigne)/2+maLigne;
@@ -569,7 +571,7 @@ int main(int argc, char **argv)
 
 			printf("Nouvelle ligne de Fin = %d\n",ligneFin);
 
-			MPI_Send(travailAFaire,3,MPI_INT,travailleurVolontaire,0,MPI_COMM_WORLD);
+			MPI_Send(travailAFaire,4,MPI_INT,travailleurVolontaire,0,MPI_COMM_WORLD);
 		}
 
 		else if((flag==1) && (maLigne>ligneFin-5)){
@@ -625,8 +627,9 @@ int main(int argc, char **argv)
 		 	//copy(pixel_radiance, image + 3 * (((h/size) - 1 - (ligneFin-maLigne)) * w + j)); // <-- retournement vertical
 		       //copy(pixel_radiance,image+3*((maLigne-ligneDebut)*w+j));
             //copy(pixel_radiance,block+3*((maLigne-ligneDebut)*w+(w-j))); //Pour inverser entre gauche et droite
-            copy(pixel_radiance,pblock+3*((maLigne-ligneDebut)*w+(w-j)));
-            compteur++;
+            //copy(pixel_radiance,pblock+3*((maLigne-ligneDebut)*w+(w-j)));
+		copy(pixel_radiance,pblock+3*((maLigne-ligneDebut)*w+(w-j))); 
+	// printf("block[i][j]=%d\n",pblock+3*((maLigne-ligneDebut)*w+(w-j)));
 	}	
 
 	//printf("\n Dans ce tour de boucle, Rank : %d, maLigne=%d, ligne Debut=%d, ligneFin=%d \n",rank,maLigne,ligneDebut,ligneFin);
@@ -657,7 +660,9 @@ int main(int argc, char **argv)
 
 		//Meilleur Recv (met l'image bien en haut)
 		//MPI_Recv(block+3*w*ligneDebut,3*w*(travailAFaire[1]-travailAFaire[0]),MPI_DOUBLE,travailleurVolontaire,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-		MPI_Recv(blockAEnvoyer+3*w*ligneDebut,3*w*(travailAFaire[1]-travailAFaire[0]),MPI_DOUBLE,travailleurVolontaire,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+		//MPI_Recv(blockAEnvoyer+3*w*ligneDebut,3*w*(travailAFaire[1]-travailAFaire[0]),MPI_DOUBLE,travailleurVolontaire,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+		//MPI_Recv(blockAEnvoyer,3*w*(travailAFaire[1]-travailAFaire[0]),MPI_DOUBLE,travailleurVolontaire,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+
 
 		//Bon Recv : 
 		//MPI_Recv(block,3*w*(travailAFaire[1]-travailAFaire[0]),MPI_DOUBLE,travailleurVolontaire,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
@@ -667,12 +672,23 @@ int main(int argc, char **argv)
 
 		
 		printf("Rank %d a reçu le travail effectué par rank %d\n",rank,travailleurVolontaire);
-
+/*
 
 
 		MPI_Send(blockAEnvoyer,3*w*(travailAFaire[1]-travailAFaire[0]),MPI_DOUBLE,travailleurVolontaire,0,MPI_COMM_WORLD);
 
+		MPI_Recv(&message,3,MPI_CHAR,MPI_ANY_SOURCE,MPI_ANY_TAG,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
 
+		MPI_Send(block,3*w*travailAFaire[4],MPI_DOUBLE,travailleurVolontaire,0,MPI_COMM_WORLD);
+		//MPI_Send(block,3*w*h,MPI_DOUBLE,travailleurVolontaire,0,MPI_COMM_WORLD);
+		//MPI_Send(block+3*w*travailAFaire[1],3*w*travailAFaire[4],MPI_DOUBLE,travailleurVolontaire,0,MPI_COMM_WORLD);
+		//MPI_Send(pblock+3*w*ligneDebut,3*w*travailAFaire[4],MPI_DOUBLE,travailleurVolontaire,0,MPI_COMM_WORLD);
+*/
+ 
+		MPI_Send(block,3*w*(ligneFin-ligneDebut),MPI_DOUBLE,travailleurVolontaire,0,MPI_COMM_WORLD);
+		
+		MPI_Recv(blockAEnvoyer,3*w*(travailAFaire[1]-travailAFaire[0]),MPI_DOUBLE,travailleurVolontaire,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+		MPI_Send(blockAEnvoyer,3*w*(travailAFaire[1]-travailAFaire[0]),MPI_DOUBLE,travailleurVolontaire,0,MPI_COMM_WORLD);
 
 	}
 
@@ -695,7 +711,7 @@ int main(int argc, char **argv)
 		contact++;
 	
 		printf("Rank %d demande du travail à %d\n",rank,contact);
-
+	
 		if (contact!=rank){
 
 
@@ -723,7 +739,7 @@ int main(int argc, char **argv)
 
 	if (reponse==1){
 
-		MPI_Recv(travailAFaire,3,MPI_INT,contact,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+		MPI_Recv(travailAFaire,4,MPI_INT,contact,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
 	} 
 
 
@@ -734,7 +750,7 @@ int main(int argc, char **argv)
 	if (travailAFaire[1]!=0 && (reponse==1) && arretTravail==0){
 
 		printf("Rank %d se met à son nouveau travail\n",rank);
-
+		
 		maLigne=travailAFaire[0];
 		ligneDebut=travailAFaire[0];
 		ligneFin=travailAFaire[1];
@@ -742,7 +758,8 @@ int main(int argc, char **argv)
 		
 
 		double *blockAEnvoyer = malloc(3 * w * h * sizeof(double));
-		if (block == NULL) {
+		//double *blockAEnvoyer = malloc(3*w*(ligneFin-ligneDebut+1) * sizeof(double));
+		if (blockAEnvoyer == NULL) {
 			perror("Impossible d'allouer l'image");
 			exit(1);
 		}
@@ -866,7 +883,7 @@ int main(int argc, char **argv)
 		
 
 		//Bon Send : 
-		MPI_Send(blockAEnvoyer,3*w*(ligneFin-ligneDebut),MPI_DOUBLE,contact,0,MPI_COMM_WORLD);
+		//MPI_Send(blockAEnvoyer,3*w*(ligneFin-ligneDebut),MPI_DOUBLE,contact,0,MPI_COMM_WORLD);
 		//MPI_Send(blockAEnvoyer,3*w*(ligneFin-ligneDebut+travailAFaire[3]),MPI_DOUBLE,contact,0,MPI_COMM_WORLD);
 		//MPI_Send(blockAEnvoyer,3*w*h,MPI_DOUBLE,contact,0,MPI_COMM_WORLD);
 
@@ -874,18 +891,41 @@ int main(int argc, char **argv)
 
 		printf("Rank %d a envoyé le travail qu'il a fait pour rank %d\n",rank,contact);
 
+		//free(blockAEnvoyer);
+
+
+
+/*
+		MPI_Recv(block+3*w*ligneDebut,3*w*(travailAFaire[1]-travailAFaire[0]),MPI_DOUBLE,contact,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+
+
+		printf("On a passé le premier Recv \n");
+
+		MPI_Send(&message,3,MPI_CHAR,contact,0,MPI_COMM_WORLD);
+
+		//MPI_Recv(block+3*w*ligneFin,3*w*(travailAFaire[4]),MPI_DOUBLE,contact,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+		//MPI_Recv(block+3*w,3*w*(travailAFaire[4]),MPI_DOUBLE,contact,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+		//MPI_Recv(block,3*w*h,MPI_DOUBLE,contact,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+		//MPI_Recv(block+3*w*(travailAFaire[1]-travailAFaire[2]),3*w*(travailAFaire[4]),MPI_DOUBLE,contact,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+		MPI_Recv(block+3*10*w,3*w*travailAFaire[4],MPI_DOUBLE,contact,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+		printf("On a passé le second Recv \n");
+*/
+		//MPI_Recv(block,3*w*40,MPI_DOUBLE,contact,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+
+		MPI_Recv(block+3*w*(travailAFaire[1]-travailAFaire[2]),3*w*travailAFaire[3],MPI_DOUBLE,contact,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+		//travailAFaire[1]-travailAFaire[2]=10   =   ligneDebut rank1 = ligneFin rank0
+		//travailAFaire[2]=90
+		//travailAFaire[3]=50
+
+		MPI_Send(blockAEnvoyer,3*w*(ligneFin-ligneDebut),MPI_DOUBLE,contact,0,MPI_COMM_WORLD);
+
+		printf("travailAFaire[2]=%d\n",travailAFaire[2]);
+		printf("x=%d\n",travailAFaire[3]+travailAFaire[1]-travailAFaire[2]);
+
+		MPI_Recv(block+3*w*(travailAFaire[3]+travailAFaire[1]-travailAFaire[2]),3*w*(ligneFin-ligneDebut),MPI_DOUBLE,contact,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+
+
 		free(blockAEnvoyer);
-
-
-
-
-		MPI_Recv(block+3*w*ligneDebut,3*w*(travailAFaire[1]-travailAFaire[0]),MPI_DOUBLE,travailleurVolontaire,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-
-		//MPI_Recv(block+3*w*ligneFin,3*w*(travailA
-
-
-
-	
 	}
 
 
@@ -943,7 +983,7 @@ int main(int argc, char **argv)
 	MPI_Isend(reponse,1,MPI_INT,travailleurVolontaire,0,MPI_COMM_WORLD,resquest);*/
 	//MPI_Igather(image,3*w*h/size,MPI_DOUBLE,imageFinal,3*w*h/size,MPI_DOUBLE,0,MPI_COMM_WORLD,request);
 	
-	MPI_Gather(block,3*w*h/size, MPI_DOUBLE,imageFinal,3*w*h/size,MPI_DOUBLE,0,MPI_COMM_WORLD);
+	//MPI_Gather(block,3*w*h/size, MPI_DOUBLE,imageFinal,3*w*h/size,MPI_DOUBLE,0,MPI_COMM_WORLD);
 
 	fprintf(stderr, "\n");
 
