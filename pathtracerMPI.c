@@ -408,12 +408,12 @@ int main(int argc, char **argv)
 	if (rank==0){
 
 		ligneDebut=0;
-		ligneFin=10;
+		ligneFin=50;
 	}
 
 	if (rank==1){
 
-		ligneDebut=10;
+		ligneDebut=50;
 		ligneFin=100;
 
 	}
@@ -489,7 +489,7 @@ int main(int argc, char **argv)
 	maLigne=ligneDebut;
 
 
-	int travailAFaire[2]={0,0};
+	int travailAFaire[3]={0,0,0};
 
 	printf("Rank %d est rentré dans la première boucle\n",rank);
 
@@ -498,6 +498,8 @@ int main(int argc, char **argv)
 	int flag=-1;
 
 	int arretTravail=0;
+
+	int reponse=0;
 
 
 	travailleurVolontaire=-1;
@@ -528,13 +530,13 @@ int main(int argc, char **argv)
 		//if((travailleurVolontaire>=0) && (maLigne!=ligneFin-1)){ //S'il reçoit un message, alors travailleurVolontaire devient positif, car les rangs sont positifs ,sinon il reste à -1
 		
 
-		if ((flag==1) && (maLigne!=ligneFin-1)){
+		if ((flag==1) && (maLigne<=ligneFin-20)){
 
 			MPI_Recv(&travailleurVolontaire,1,MPI_INT,MPI_ANY_SOURCE,MPI_ANY_TAG,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
 
 			printf("\n Rank %d a reçu une proposition de travail de rank %d\n",rank,travailleurVolontaire);
 
-			int reponse=1;
+			reponse=1;
 			MPI_Send(&reponse,1,MPI_INT,travailleurVolontaire,0,MPI_COMM_WORLD);
 
 			printf("Rank %d a répondu à rank %d\n",rank,travailleurVolontaire);
@@ -543,6 +545,7 @@ int main(int argc, char **argv)
 			
 			travailAFaire[0]=(ligneFin-maLigne)/2+maLigne;
 			travailAFaire[1]=ligneFin;
+			travailAFaire[2]=ligneFin-ligneDebut; //On aura besoin pour envoyer à l'autre processus afin qu'il reconstitue une bonne image
 			
 			
 			//travailAFaire[0]=maLigne;
@@ -559,11 +562,11 @@ int main(int argc, char **argv)
 
 			printf("Nouvelle ligne de Fin = %d\n",ligneFin);
 
-			MPI_Send(travailAFaire,2,MPI_INT,travailleurVolontaire,0,MPI_COMM_WORLD);
+			MPI_Send(travailAFaire,3,MPI_INT,travailleurVolontaire,0,MPI_COMM_WORLD);
 		}
 
-		if(maLigne==ligneFin){
-			int reponse=0;
+		else if((flag==1) && (maLigne>ligneFin-20)){
+			reponse=0;
 			MPI_Send(&reponse,1,MPI_INT,travailleurVolontaire,0,MPI_COMM_WORLD);
 		}
 
@@ -614,7 +617,8 @@ int main(int argc, char **argv)
 		       // printf("\n pixel_radiance = {%d,%d,%d}\n",pixel_radiance[0],pixel_radiance[1],pixel_radiance[2]); 
 		 	//copy(pixel_radiance, image + 3 * (((h/size) - 1 - (ligneFin-maLigne)) * w + j)); // <-- retournement vertical
 		       //copy(pixel_radiance,image+3*((maLigne-ligneDebut)*w+j));
-            copy(pixel_radiance,block+3*((maLigne-ligneDebut)*w+(w-j))); //Pour inverser entre gauche et droite
+            //copy(pixel_radiance,block+3*((maLigne-ligneDebut)*w+(w-j))); //Pour inverser entre gauche et droite
+            copy(pixel_radiance,block+3*((maLigne-ligneDebut)*w+(w-j)));
             compteur++;
 	}	
 
@@ -628,18 +632,27 @@ int main(int argc, char **argv)
 	}
 
 
+
 	//Si le processus a été aidé par un travailleur
 	if (travailleurVolontaire!=-1){
 
 		//Il doit rassembler les différents codes
 
 
+
+
 		printf("Rank %d va reçevoir le travail effectué par rank %d\n",rank,travailleurVolontaire);
 
+
+		//Meilleur Recv (met l'image bien en haut)
 		MPI_Recv(block+3*w*ligneDebut,3*w*(travailAFaire[1]-travailAFaire[0]),MPI_DOUBLE,travailleurVolontaire,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
 
 		//Bon Recv : 
 		//MPI_Recv(block,3*w*(travailAFaire[1]-travailAFaire[0]),MPI_DOUBLE,travailleurVolontaire,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+		//MPI_Recv(block,3*w*(travailAFaire[1]-travailAFaire[0]+travailAFaire[3]),MPI_DOUBLE,travailleurVolontaire,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+
+		
+
 		
 		printf("Rank %d a reçu le travail effectué par rank %d\n",rank,travailleurVolontaire);
 
@@ -655,7 +668,7 @@ int main(int argc, char **argv)
 	//FONCTION RECURSIVE A CODER
 
 	int contact=-1; //Numéro du processus que l'on contacte
-	int reponse=0;
+	reponse=0;
 
 	while((contact<size-1) &&(reponse==0) && (arretTravail==0)){
 		contact++;
@@ -668,17 +681,17 @@ int main(int argc, char **argv)
 
 			printf("On est bien rentré dans le if\n");
 			MPI_Send(&rank,1,MPI_INT,contact,0,MPI_COMM_WORLD);
-			printf("La demande de rank %d a bien été reçue\n ",rank);
+			printf("La demande de rank %d a bien été reçue par %d\n ",rank,contact);
 
 
 			MPI_Recv(&reponse,1,MPI_INT,contact,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-			printf("On a répondu à la demande de travail de rank %d\n",rank);
+			printf("On a répondu à la demande de travail de rank %d, reponse=%d par %d\n",rank,reponse,contact);
 		}
-		//personne n'a de travail a nous envoyer, le programme est donc fini
+		//personne n'a de travail à nous envoyer, le programme est donc fini
 		// il ne reste qu'à rassembler l'image
 	}
 
-	printf("Rank %d arrête de demander du travail\n",rank);
+	printf("Rank %d arrête de demander du travail, reponse=%d\n",rank,reponse);
 
 
 
@@ -688,7 +701,7 @@ int main(int argc, char **argv)
 
 	if (reponse==1){
 
-		MPI_Recv(travailAFaire,2,MPI_INT,contact,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+		MPI_Recv(travailAFaire,3,MPI_INT,contact,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
 	} 
 
 
@@ -757,10 +770,12 @@ int main(int argc, char **argv)
 			MPI_Send(travailAFaire,2,MPI_INT,travailleurVolontaire,0,MPI_COMM_WORLD);  */
 		}
 
+		/*
+
 		if(maLigne==ligneFin){
 			reponse=0;
 			MPI_Send(&reponse,1,MPI_INT,travailleurVolontaire,0,MPI_COMM_WORLD);
-		}
+		}*/
 
 
 
@@ -818,6 +833,9 @@ int main(int argc, char **argv)
 		}
 
 		//ENVOI DU TRAVAIL FAIT
+
+
+
 		printf("Rank %d va envoyer le travail fait à rank %d \n",rank,contact);
 
 		//MPI_Send(blockAEnvoyer+3*w*ligneDebut,3*w*(ligneFin-ligneDebut),MPI_DOUBLE,contact,0,MPI_COMM_WORLD);
@@ -825,7 +843,8 @@ int main(int argc, char **argv)
 
 		//Bon Send : 
 		MPI_Send(blockAEnvoyer,3*w*(ligneFin-ligneDebut),MPI_DOUBLE,contact,0,MPI_COMM_WORLD);
-		
+		//MPI_Send(blockAEnvoyer,3*w*(ligneFin-ligneDebut+travailAFaire[3]),MPI_DOUBLE,contact,0,MPI_COMM_WORLD);
+		//MPI_Send(blockAEnvoyer,3*w*h,MPI_DOUBLE,contact,0,MPI_COMM_WORLD);
 
 		//MPI_Send(block,3*w*(ligneFin-ligneDebut),MPI_DOUBLE,contact,0,MPI_COMM_WORLD);
 
@@ -976,7 +995,8 @@ int main(int argc, char **argv)
                 for (int i = 0; i < w * h; i++) 
                         //fprintf(g,"%d %d %d ", ligneDebut, ligneDebut, ligneDebut);
 			//fprintf(f,"%d %d %d ", toInt(image[3 * i]), toInt(image[3 * i + 1]), toInt(image[3 * i + 2]));
-                        fprintf(g,"%d %d %d ", toInt(block[3 *(w*h/(rank+1)-i)]), toInt(block[3 * (w*h/(rank+1)-i)+1]), toInt(block[3 * (w*h/(rank+1)-i)+2])); 
+                        //fprintf(g,"%d %d %d ", toInt(block[3 *(w*h/(rank+1)-i)]), toInt(block[3 * (w*h/(rank+1)-i)+1]), toInt(block[3 * (w*h/(rank+1)-i)+2])); 
+                	fprintf(g,"%d %d %d ", toInt(block[3 *(w*h/(rank+1)-i)]), toInt(block[3 * (w*h/(rank+1)-i)+1]), toInt(block[3 * (w*h/(rank+1)-i)+2])); 
                 fclose(g); 
 
 		printf("\n image1.ppm enregistré \n");
