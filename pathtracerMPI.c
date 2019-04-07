@@ -501,6 +501,7 @@ int main(int argc, char **argv)
 
 	int reponse=0;
 
+	char message[3];
 
 	travailleurVolontaire=-1;
 
@@ -532,7 +533,9 @@ int main(int argc, char **argv)
 
 		if ((flag==1) && (maLigne<=ligneFin-20)){
 
-			MPI_Recv(&travailleurVolontaire,1,MPI_INT,MPI_ANY_SOURCE,MPI_ANY_TAG,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+			MPI_Recv(&message,3,MPI_CHAR,MPI_ANY_SOURCE,MPI_ANY_TAG,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+
+			travailleurVolontaire=status.MPI_SOURCE;
 
 			printf("\n Rank %d a reçu une proposition de travail de rank %d\n",rank,travailleurVolontaire);
 
@@ -669,6 +672,9 @@ int main(int argc, char **argv)
 
 	int contact=-1; //Numéro du processus que l'on contacte
 	reponse=0;
+	message[0]='O';
+	message[1]='k';
+	message[3]='\0';
 
 	while((contact<size-1) &&(reponse==0) && (arretTravail==0)){
 		contact++;
@@ -680,7 +686,8 @@ int main(int argc, char **argv)
 
 
 			printf("On est bien rentré dans le if\n");
-			MPI_Send(&rank,1,MPI_INT,contact,0,MPI_COMM_WORLD);
+			MPI_Send(&message,3,MPI_CHAR,contact,0,MPI_COMM_WORLD);
+			//Si le processeur reçoit 1000, il sera que c'est un travailleur
 			printf("La demande de rank %d a bien été reçue par %d\n ",rank,contact);
 
 
@@ -909,7 +916,7 @@ int main(int argc, char **argv)
 	MPI_Isend(reponse,1,MPI_INT,travailleurVolontaire,0,MPI_COMM_WORLD,resquest);*/
 	//MPI_Igather(image,3*w*h/size,MPI_DOUBLE,imageFinal,3*w*h/size,MPI_DOUBLE,0,MPI_COMM_WORLD,request);
 	
-	//MPI_Gather(block,3*w*h/size, MPI_DOUBLE,imageFinal,3*w*h/size,MPI_DOUBLE,0,MPI_COMM_WORLD);
+	MPI_Gather(block,3*w*h/size, MPI_DOUBLE,imageFinal,3*w*h/size,MPI_DOUBLE,0,MPI_COMM_WORLD);
 
 	fprintf(stderr, "\n");
 
@@ -946,11 +953,14 @@ int main(int argc, char **argv)
 		fprintf(f, "P3\n%d %d\n%d\n", w, h, 255); 
 		for (int i = 0; i < w * h; i++) 
 	  		//fprintf(f,"%d %d %d ", toInt(image[3 * i]), toInt(image[3 * i + 1]), toInt(image[3 * i + 2]));
-	  		//fprintf(f,"%d %d %d ", toInt(imageFinal[3 *(w*h/(rank+1)-i)]), toInt(imageFinal[3 * (w*h/(rank+1)-i)+1]), toInt(imageFinal[3 * (w*h/(rank+1)-i)+2]));
-	  		fprintf(f,"%d %d %d ", toInt(block[3 *(w*h/(rank+1)-i)]), toInt(block[3 * (w*h/(rank+1)-i)+1]), toInt(block[3 * (w*h/(rank+1)-i)+2]));  
+	  		fprintf(f,"%d %d %d ", toInt(imageFinal[3 *(w*h/(rank+1)-i)]), toInt(imageFinal[3 * (w*h/(rank+1)-i)+1]), toInt(imageFinal[3 * (w*h/(rank+1)-i)+2]));
+//	  		fprintf(f,"%d %d %d ", toInt(block[3 *(w*h/(rank+1)-i)]), toInt(block[3 * (w*h/(rank+1)-i)+1]), toInt(block[3 * (w*h/(rank+1)-i)+2]));  
 		fclose(f); 
 		
 
+
+		
+		
 		printf("\n image0.ppm enregistré \n");
 		free(imageFinal);
 /*
