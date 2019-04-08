@@ -30,6 +30,13 @@ struct Sphere {
 	double max_reflexivity;
 };
 
+double my_gettimeofday(){
+  struct timeval tmp_time;
+  gettimeofday(&tmp_time, NULL);
+  return tmp_time.tv_sec + (tmp_time.tv_usec * 1.0e-6L);
+}
+
+
 static const int KILL_DEPTH = 7;
 static const int SPLIT_DEPTH = 4;
 
@@ -352,6 +359,11 @@ int main(int argc, char **argv)
 	int w = 320;
 	int h = 200;
 	int samples = 200;
+	
+	double debut,fin;
+
+	debut=my_gettimeofday();
+
 
 	/* Gros cas test (big, slow and pretty): */
 	/* int w = 3840; */
@@ -454,4 +466,11 @@ int main(int argc, char **argv)
 	}
 
 	free(image);
+
+	fin = my_gettimeofday();
+  fprintf( stderr, "Temps total de calcul : %g sec pour rank %d\n", 
+         fin - debut);
+  fprintf( stdout, "%g\n", fin - debut);
 }
+
+         

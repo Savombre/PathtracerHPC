@@ -45,14 +45,14 @@ struct Sphere spheres[] = {
    {1e5,  {50,      1e5,        81.6},      {},           {0.75, .75,  .75},  DIFF, -1}, // Bottom 
    {1e5,  {50,     -1e5 + 81.6, 81.6},      {},           {0.75, .75,  .75},  DIFF, -1}, // Top 
 
-/*
+
    {16.5, {40,      16.5,       47},        {},           {.999, .999, .999}, SPEC, -1}, // Mirror 
    {16.5, {73,      46.5,       88},        {},           {.999, .999, .999}, REFR, -1}, // Glass 
    {10,   {15,      45,         112},       {},           {.999, .999, .999}, DIFF, -1}, // white ball
    {15,   {16,      16,         130},       {},           {.999, .999, 0},    REFR, -1}, // big yellow glass
    {7.5,  {40,      8,          120},        {},           {.999, .999, 0   }, REFR, -1}, // small yellow glass middle
    {8.5,  {60,      9,          110},        {},           {.999, .999, 0   }, REFR, -1}, // small yellow glass right
-*/
+
    {10,   {80,      12,         92},        {},           {0, .999, 0},       DIFF, -1}, // green ball
 
 
@@ -64,6 +64,12 @@ struct Sphere spheres[] = {
 
 
 //////////////////////////////////////////// AVANT LE MAIN ///////////////////////////////////////////////////////////////////////
+
+double my_gettimeofday(){
+  struct timeval tmp_time;
+  gettimeofday(&tmp_time, NULL);
+  return tmp_time.tv_sec + (tmp_time.tv_usec * 1.0e-6L);
+}
 
 
 /********** micro BLAS LEVEL-1 + quelques fonctions non-standard **************/
@@ -358,20 +364,44 @@ int toInt(double x)
 	return pow(x, 1 / 2.2) * 255 + .5;   /* gamma correction = 2.2 */
 } 
 
+int stop(MPI_Status status){
+
+	
+        int flag=-1;
+	int arretTravail;
+
+	  MPI_Iprobe(MPI_ANY_SOURCE,42,MPI_COMM_WORLD,&flag,&status);
+
+	if (flag==1){
+
+		arretTravail=1;
+	}
+
+	else {
+
+	arretTravail=0;
+
+	}
+
+	return(arretTravail);
+}
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////:
 
 
 int main(int argc, char **argv)
 { 
 	/* Petit cas test (small, quick and dirty): */
-	//int w = 320; 
-	//int h = 200; 
-	//int samples = 200;
+	int w = 320; 
+	int h = 200; 
+	int samples = 200;
 
+
+	/*
 	int w = 160;
 	int h = 100;
 	int samples = 100;
-
+	*/
 
 	/* Gros cas test (big, slow and pretty): */
 	/* int w = 3840; */
@@ -381,7 +411,9 @@ int main(int argc, char **argv)
 
 ////////////////////////////////// INITIALISATION /////////////////////////////////////////
 
+	double debut,fin;
 
+	debut=my_gettimeofday();
 
 	MPI_Init(&argc,&argv);
 
@@ -400,24 +432,35 @@ int main(int argc, char **argv)
   	int ligneMilieu;
 
   	int ligneDebut,ligneFin;
-  	/*
-  	ligneDebut=rank*h/size;
-  	ligneFin=(rank+1)*h/size;
-	*/
+
+
+	if (rank==0){
+  		ligneDebut=(rank+1)*h/size;
+  		ligneFin=(rank+2)*h/size;
+	}
+
+	if (rank==1){
+		ligneDebut=(rank-1)*h/size;
+		ligneFin=rank*h/size;
+	}
+
+	/*
 
 	if (rank==0){
 
 		ligneDebut=0;
-		ligneFin=10;
+		ligneFin=50;
 	}
 
 	if (rank==1){
 
-		ligneDebut=10;
+		ligneDebut=50;
 		ligneFin=100;
 
 	}
 
+
+	*/
 
   	printf("\n Rank : %d, ligne Debut=%d, ligneFin=%d \n",rank,ligneDebut,ligneFin);
 
@@ -503,11 +546,19 @@ int main(int argc, char **argv)
 
 	int flag=-1;
 
+	int k;
+
 	int arretTravail=0;
 
 	int reponse=0;
 
 	char message[3];
+
+	int transmissionZero=0;
+
+	if (rank==0){
+		transmissionZero=1;
+	}
 
 	travailleurVolontaire=-1;
 
@@ -537,7 +588,10 @@ int main(int argc, char **argv)
 		//if((travailleurVolontaire>=0) && (maLigne!=ligneFin-1)){ //S'il reçoit un message, alors travailleurVolontaire devient positif, car les rangs sont positifs ,sinon il reste à -1
 		
 
-		if ((flag==1) && (maLigne<=ligneFin-5)){
+		if ((flag==1) && (maLigne<=ligneFin-2)){
+
+
+			printf("%d va reçevoir du travail par rank %d\n",status.MPI_SOURCE,rank);
 
 			MPI_Recv(&message,3,MPI_CHAR,MPI_ANY_SOURCE,MPI_ANY_TAG,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
 
@@ -561,7 +615,7 @@ int main(int argc, char **argv)
 			//travailAFaire[1]=(ligneFin-maLigne)/2+maLigne;
 	
 
-			printf("travailAFaire={%d;%d}\n",travailAFaire[0],travailAFaire[1]);
+			printf("travailAFaire={%d;%d} pour rank %d\n",travailAFaire[0],travailAFaire[1],rank);
 
 			//travailAFaire={(ligneFin-maLigne)/2+maLigne,ligneFin};
 			//Pour le nouveau travailleur : {ligneDebut,ligneFin} 
@@ -569,14 +623,16 @@ int main(int argc, char **argv)
 
 			//maLigne=(ligneFin-maLigne)/2+maLigne;
 
-			printf("Nouvelle ligne de Fin = %d\n",ligneFin);
+			printf("Nouvelle ligne de Fin = %d pour rank %d\n",ligneFin,rank);
 
 			MPI_Send(travailAFaire,4,MPI_INT,travailleurVolontaire,0,MPI_COMM_WORLD);
 		}
 
-		else if((flag==1) && (maLigne>ligneFin-5)){
+		else if((flag==1) && (maLigne>ligneFin-2)){
+			printf("Rank %d va refuser la demande de travail de rank %d\n",rank,status.MPI_SOURCE);
+			MPI_Recv(&message,3,MPI_CHAR,MPI_ANY_SOURCE,MPI_ANY_TAG,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
 			reponse=0;
-			MPI_Send(&reponse,1,MPI_INT,travailleurVolontaire,0,MPI_COMM_WORLD);
+			MPI_Send(&reponse,1,MPI_INT,status.MPI_SOURCE,0,MPI_COMM_WORLD);
 		}
 
 
@@ -641,11 +697,23 @@ int main(int argc, char **argv)
 		maLigne++;
 	}
 
-	
+
+
+
+
+
+
+
+	//ENVOI
+
+
+
+	//MPI_Send(block,3*w*(ligneFin-ligneDebut),MPI_DOUBLE,travailleurVolontaire,0,MPI_COMM_WORLD);
 
 	//Si le processus a été aidé par un travailleur
 	if (travailleurVolontaire!=-1){
 
+		if (travailleurVolontaire==0) transmissionZero=1;
 		//Il doit rassembler les différents codes
 
 		double *blockAEnvoyer = malloc(3 * w * h * sizeof(double));
@@ -672,6 +740,11 @@ int main(int argc, char **argv)
 
 		
 		printf("Rank %d a reçu le travail effectué par rank %d\n",rank,travailleurVolontaire);
+		          fin = my_gettimeofday();
+  fprintf( stderr, "Temps total de calcul : %g sec pour rank %d\n", 
+         fin - debut,rank);
+  fprintf( stdout, "%g\n", fin - debut);
+
 /*
 
 
@@ -685,10 +758,10 @@ int main(int argc, char **argv)
 		//MPI_Send(pblock+3*w*ligneDebut,3*w*travailAFaire[4],MPI_DOUBLE,travailleurVolontaire,0,MPI_COMM_WORLD);
 */
  
-		MPI_Send(block,3*w*(ligneFin-ligneDebut),MPI_DOUBLE,travailleurVolontaire,0,MPI_COMM_WORLD);
+		MPI_Send(block,3*w*(ligneFin-ligneDebut),MPI_DOUBLE,travailleurVolontaire,rank,MPI_COMM_WORLD);
 		
-		MPI_Recv(blockAEnvoyer,3*w*(travailAFaire[1]-travailAFaire[0]),MPI_DOUBLE,travailleurVolontaire,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-		MPI_Send(blockAEnvoyer,3*w*(travailAFaire[1]-travailAFaire[0]),MPI_DOUBLE,travailleurVolontaire,0,MPI_COMM_WORLD);
+		MPI_Recv(blockAEnvoyer,3*w*(travailAFaire[1]-travailAFaire[0]),MPI_DOUBLE,travailleurVolontaire,rank,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+		MPI_Send(blockAEnvoyer,3*w*(travailAFaire[1]-travailAFaire[0]),MPI_DOUBLE,travailleurVolontaire,rank,MPI_COMM_WORLD);
 
 	}
 
@@ -707,6 +780,9 @@ int main(int argc, char **argv)
 	message[1]='k';
 	message[3]='\0';
 
+
+	arretTravail=stop(status);
+
 	while((contact<size-1) &&(reponse==0) && (arretTravail==0)){
 		contact++;
 	
@@ -724,6 +800,12 @@ int main(int argc, char **argv)
 
 			MPI_Recv(&reponse,1,MPI_INT,contact,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
 			printf("On a répondu à la demande de travail de rank %d, reponse=%d par %d\n",rank,reponse,contact);
+		
+			if (reponse==-1){
+
+				printf("Rank 0 a décrété le stop pour rank %d\n",rank);
+				break;
+			}
 		}
 		//personne n'a de travail à nous envoyer, le programme est donc fini
 		// il ne reste qu'à rassembler l'image
@@ -740,9 +822,12 @@ int main(int argc, char **argv)
 	if (reponse==1){
 
 		MPI_Recv(travailAFaire,4,MPI_INT,contact,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+
 	} 
 
 
+
+	
 
 	//Exécution du travail
 
@@ -772,18 +857,23 @@ int main(int argc, char **argv)
 		while ( maLigne < ligneFin ) {
 
 			MPI_Iprobe(MPI_ANY_SOURCE,MPI_ANY_TAG,MPI_COMM_WORLD,&flag,&status);
-		
+				
 
 			if ((flag==1)){  
 
-				MPI_Recv(&travailleurVolontaire,1,MPI_INT,MPI_ANY_SOURCE,MPI_ANY_TAG,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+
+
+				
+
+
+				MPI_Recv(&message,3,MPI_CHAR,MPI_ANY_SOURCE,MPI_ANY_TAG,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
 
 
 				printf("Rank %d a reçu un message\n",rank);
 
-				reponse=0;
-				MPI_Send(&reponse,1,MPI_INT,travailleurVolontaire,0,MPI_COMM_WORLD);
-
+				reponse=0;  
+				MPI_Send(&reponse,1,MPI_INT,status.MPI_SOURCE,0,MPI_COMM_WORLD);
+				reponse=1;
 				printf("Rank %d a envoyé sa réponse\n",rank);
 
 			/*
@@ -912,17 +1002,25 @@ int main(int argc, char **argv)
 */
 		//MPI_Recv(block,3*w*40,MPI_DOUBLE,contact,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
 
-		MPI_Recv(block+3*w*(travailAFaire[1]-travailAFaire[2]),3*w*travailAFaire[3],MPI_DOUBLE,contact,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+
+
+	  fin = my_gettimeofday();
+  fprintf( stderr, "Temps total de calcul : %g sec pour rank %d\n", 
+         fin - debut,rank);
+  fprintf( stdout, "%g\n", fin - debut);
+
+
+		MPI_Recv(block+3*w*(travailAFaire[1]-travailAFaire[2]),3*w*travailAFaire[3],MPI_DOUBLE,contact,contact,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
 		//travailAFaire[1]-travailAFaire[2]=10   =   ligneDebut rank1 = ligneFin rank0
 		//travailAFaire[2]=90
 		//travailAFaire[3]=50
 
-		MPI_Send(blockAEnvoyer,3*w*(ligneFin-ligneDebut),MPI_DOUBLE,contact,0,MPI_COMM_WORLD);
+		MPI_Send(blockAEnvoyer,3*w*(ligneFin-ligneDebut),MPI_DOUBLE,contact,contact,MPI_COMM_WORLD);
 
-		printf("travailAFaire[2]=%d\n",travailAFaire[2]);
-		printf("x=%d\n",travailAFaire[3]+travailAFaire[1]-travailAFaire[2]);
+	//	printf("travailAFaire[2]=%d\n",travailAFaire[2]);
+	//	printf("x=%d\n",travailAFaire[3]+travailAFaire[1]-travailAFaire[2]);
 
-		MPI_Recv(block+3*w*(travailAFaire[3]+travailAFaire[1]-travailAFaire[2]),3*w*(ligneFin-ligneDebut),MPI_DOUBLE,contact,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+		MPI_Recv(block+3*w*(travailAFaire[3]+travailAFaire[1]-travailAFaire[2]),3*w*(ligneFin-ligneDebut),MPI_DOUBLE,contact,contact,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
 
 
 		free(blockAEnvoyer);
@@ -937,7 +1035,7 @@ int main(int argc, char **argv)
 
 	//Il n'y a plus de travail à faire
 
-	arretTravail=1;
+	//arretTravail=1;
 	//MPI_Bcast(&arretTravail,1,MPI_INT,0,MPI_COMM_WORLD);
 
 
@@ -956,38 +1054,125 @@ int main(int argc, char **argv)
 
 		printf("Rank %d va rentrer dans la boucle flag\n",rank);
 
+
+	
+	//for (k=0;k<size;k++){
+
 		while(flag==0){
 
 
 
-			MPI_Iprobe(MPI_ANY_SOURCE,MPI_ANY_TAG,MPI_COMM_WORLD,&flag,&status);
+			MPI_Iprobe(1,MPI_ANY_TAG,MPI_COMM_WORLD,&flag,&status);
 
 		}
 
-		printf("Rank %d est sorti de la boucle flag car flag=%d \n",rank,flag);
+		printf("Rank %d est sorti de la boucle flag car flag=%d pour rank %d\n",rank,flag,status.MPI_SOURCE);
 
 		//MPI_Test(&request, &flag, &status);
 
 		reponse=0;
 
-		MPI_Send(&reponse,1,MPI_INT,status.MPI_SOURCE,0,MPI_COMM_WORLD);
+
+
+		if (rank!=0){
+			MPI_Send(&reponse,1,MPI_INT,status.MPI_SOURCE,0,MPI_COMM_WORLD);
+		}
+
+		else{
+
+			reponse=-1;
+			MPI_Send(&reponse,1,MPI_INT,status.MPI_SOURCE,0,MPI_COMM_WORLD);
+		}
+	//}
 	}
 
 	printf("\nOn va passer au Gather pour rank %d\n",rank);
 
 
-	/*
-	reponse=0;
-	int travailleurVolontaire;
+
+	//Transmission à Zero
+
+/*
+	if (transmissionZero==0){
+
+		printf("Rank %d entre dans la transmission à Zero \n",rank);
+		MPI_Send(block,3*w*(ligneFin-ligneDebut),MPI_DOUBLE,0,rank,MPI_COMM_WORLD);
+		printf("Rank %d sort de la transmission à Zero \n",rank);
+	}
+
+	if (rank==0){
+		
+
+		printf("Rank 0 va récolter les transmissions \n");
+
+		for (contact=1;contact<size;contact++){
+			flag=0;
+
+			MPI_Iprobe(contact,contact,MPI_COMM_WORLD,&flag,&status);
+
+			if (flag==1){
+				printf("Rank 0 a trouvé une transmission pour rank %d\n",contact);
+				
+				//MPI_Recv(block+3*w*(h-(contact+1)*h/size),3*w*h/size,MPI_DOUBLE,contact,contact,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+				MPI_Recv(block,3*w*h/size,MPI_DOUBLE,contact,contact,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+			}
+		}
+
+	}*/
+	
+	
+
+
+
+	/*int travailleurVolontaire;
 	MPI_Irecv(travailleurVolontaire,MPI_INT,0,MPI_ANY_SOURCE,MPI_COMM_WORLD,resquest);
 	MPI_Isend(reponse,1,MPI_INT,travailleurVolontaire,0,MPI_COMM_WORLD,resquest);*/
 	//MPI_Igather(image,3*w*h/size,MPI_DOUBLE,imageFinal,3*w*h/size,MPI_DOUBLE,0,MPI_COMM_WORLD,request);
 	
 	//MPI_Gather(block,3*w*h/size, MPI_DOUBLE,imageFinal,3*w*h/size,MPI_DOUBLE,0,MPI_COMM_WORLD);
 
+
+
+
+
 	fprintf(stderr, "\n");
 
 	
+
+
+	if(rank==0){
+	//Afin de faire comprendre aux retardataires qu'on a fini
+
+
+		message[0]='s';
+		message[1]='t';
+		message[2]='o';
+		message[3]='p';
+		message[4]='\0';
+	
+
+	//MPI_Bcast(&message,5,MPI_CHAR,0,MPI_COMM_WORLD);
+
+		int i;
+		for (i=1;i<size;i++){
+
+
+			//MPI_Isend(&message,5,MPI_CHAR,i,42,MPI_COMM_WORLD,&request);
+
+		}
+
+	//printf("\n Rank 0 a envoyé STOP à tout le monde\n");
+
+	}
+
+	/*if(rank!=0){
+
+
+
+	MPI_Wait(&request,&status);
+	
+	}*/
+
 	//printf("\n Rank %d  n'est pas bloqué par le Igather\n",rank);
 
 
@@ -1098,9 +1283,44 @@ int main(int argc, char **argv)
                // free(imageFinal);
         }
 
+     if (rank==2){
+
+                printf("\n Enregistrement de l'image pour %d \n",rank);
+
+                struct passwd *pass; 
+                char nom_sortie[100] = "";
+                char nom_rep[30] = "";
+
+                pass = getpwuid(getuid()); 
+                //sprintf(nom_rep, "/home/sasl/eleves/main/3776597/MAIN4/HPC/Projet/%s", pass->pw_name);
+                sprintf(nom_rep,"/tmp/%s",pass->pw_name);
+                mkdir(nom_rep, S_IRWXU);
+                sprintf(nom_sortie, "%s/image2.ppm", nom_rep);
+                printf("\n Juste avant l'ouverture de fichier tout va bien \n");                
+                FILE *fff = fopen(nom_sortie, "w");
+                printf("\n Là, ça va bien \n");
+                fprintf(fff, "P3\n%d %d\n%d\n", w, h, 255); 
+                printf("\n L'enregistrement fonctionne \n");            
+                for (int i = 0; i < w * h; i++) 
+                        //fprintf(g,"%d %d %d ", ligneDebut, ligneDebut, ligneDebut);
+                        //fprintf(f,"%d %d %d ", toInt(image[3 * i]), toInt(image[3 * i + 1]), toInt(image[3 * i + 2]));
+                        //fprintf(g,"%d %d %d ", toInt(block[3 *(w*h/(rank+1)-i)]), toInt(block[3 * (w*h/(rank+1)-i)+1]), toInt(block[3 * (w*h/(rank+1)-i)+2])); 
+                        fprintf(fff,"%d %d %d ", toInt(block[3 *(w*h/(rank+1)-i)]), toInt(block[3 * (w*h/(rank+1)-i)+1]), toInt(block[3 * (w*h/(rank+1)-i)+2])); 
+                fclose(fff); 
+
+                printf("\n image2.ppm enregistré \n");
+                                                
+               // free(imageFinal);
+        }
+
+
 
 	free(block);
 
+  fin = my_gettimeofday();
+  fprintf( stderr, "Temps total de calcul : %g sec pour rank %d\n", 
+         fin - debut,rank);
+  fprintf( stdout, "%g\n", fin - debut);
 	
 
 	MPI_Finalize();
