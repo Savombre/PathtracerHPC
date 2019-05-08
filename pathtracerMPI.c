@@ -428,9 +428,16 @@ int main(int argc, char **argv)
 
   	//Création du jeton
 
+
+/* Vu que c'est relou de faire communiquer des struct avec MPI on va essayer autre chose
+
   	Jeton jeton;
 
   	jeton.msg=VIDE;
+
+  */
+
+  	int jeton=-1;
 
 
 
@@ -504,6 +511,8 @@ int main(int argc, char **argv)
 
 
 
+
+
 	for (maLigne= ligneDebut; maLigne < ligneFin; maLigne++){
 
 
@@ -512,7 +521,11 @@ int main(int argc, char **argv)
 
 		if (flag==1){
 
-			printf("Rank %d a reçu le jeton\n",rank);
+			MPI_Recv(&jeton,1,MPI_INT,MPI_ANY_SOURCE,MPI_ANY_TAG,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+
+			printf("Rank %d a reçu le jeton=%d\n",rank,jeton);
+
+			MPI_Send(&jeton,1,MPI_INT,rank+1,0,MPI_COMM_WORLD);
 		}
 
 
@@ -559,11 +572,21 @@ int main(int argc, char **argv)
 		       //copy(pixel_radiance,image+3*((maLigne-ligneDebut)*w+j));
             copy(pixel_radiance,image+3*((maLigne-ligneDebut)*w+(w-j))); //Pour inverser entre gauche et droite
             compteur++;
-}	
+		}	
 
 		//printf("Rank :%d Jusqu'ici tout va bien\n",rank);
 
 		printf("Rank:%d ligne:%d \n",rank,maLigne);
+
+
+
+		//Permet à rank 0 d'envoyer le premier message
+		if (maLigne==0){
+
+			jeton=0;
+
+			MPI_Send(&jeton,1,MPI_INT,rank+1,0,MPI_COMM_WORLD);
+		}
 	}
 
 	printf("\nOn va passer au Gather pour rank %d\n",rank);
