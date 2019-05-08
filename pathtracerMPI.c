@@ -670,6 +670,7 @@ int main(int argc, char **argv)
 			// Si on reçoit qu'il n'y a plus de travail à faire
 			if (jeton==-2){
 
+				//Si c'est le dernier processus qui reçoit le jeton, il le renvoie à rank 0
 				if (rank==size-1){
 					MPI_Send(&jeton,1,MPI_INT,0,0,MPI_COMM_WORLD);
 				}
@@ -683,22 +684,14 @@ int main(int argc, char **argv)
 			}
 
 
-			//Si c'est le dernier processus qui reçoit le jeton, il le renvoie à rank 0
-			if (rank==size-1){
-				MPI_Send(&jeton,1,MPI_INT,0,0,MPI_COMM_WORLD);
-			}
-
-			else{
-				MPI_Send(&jeton,1,MPI_INT,rank+1,0,MPI_COMM_WORLD);
-			}
-
+	
 
 		}
 
 
 
 
-
+		printf("Rank %d va calculer une ligne\n",rank);
 
 ///////////////////////////////////////////////// CALCUL D'UNE LIGNE  ///////////////////////////////////////////////////////////////
  
