@@ -528,7 +528,7 @@ int main(int argc, char **argv)
 	//Tant que tout n'a pas été fini
 	while(jeton!=-2){
 
-		printf("Rank %d commence un tour de boucle while",rank);
+
 
 
 
@@ -571,6 +571,8 @@ int main(int argc, char **argv)
 					travailAFaire[1]=ligneFin;
 
 
+					rintf("Rank %d envoit du travail à faire à rank %d\n",rank,travailleurVolontaire);
+
 					//On dit au travailleur Volontaire qu'on va lui envoyer du travail
 					jeton=-4;
 					MPI_Send(&jeton,1,MPI_INT,rank+1,0,MPI_COMM_WORLD);
@@ -606,6 +608,8 @@ int main(int argc, char **argv)
 
 			//Si on veut donner du travail au processus
 			if(jeton==-4){
+
+				printf("Rank %d reçoit du travail à faire de la part de %d\n",rank,status.MPI_SOURCE);
 
 				MPI_Recv(travailAFaire,2,MPI_INT,MPI_ANY_SOURCE,MPI_ANY_TAG,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
 
@@ -693,7 +697,7 @@ int main(int argc, char **argv)
 
 
 
-		printf("Rank %d va calculer une ligne\n",rank);
+		
 
 ///////////////////////////////////////////////// CALCUL D'UNE LIGNE  ///////////////////////////////////////////////////////////////
  
@@ -743,6 +747,9 @@ int main(int argc, char **argv)
 	            copy(pixel_radiance,image+3*((maLigne-ligneDebut)*w+(w-j))); //Pour inverser entre gauche et droite
 	            compteur++;
 			}	
+
+			printf("Rank:%d ligne:%d \n",rank,maLigne);
+		
 		}	
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -750,7 +757,7 @@ int main(int argc, char **argv)
 
 		//printf("Rank :%d Jusqu'ici tout va bien\n",rank);
 
-		printf("Rank:%d ligne:%d \n",rank,maLigne);
+		
 
 
 
