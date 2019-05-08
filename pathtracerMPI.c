@@ -793,8 +793,8 @@ int main(int argc, char **argv)
 	}
 
 	printf("\nOn va passer au Gather pour rank %d\n",rank);
-	printf("w*h/size=%d\n",w*h/size);
-	printf("compteur=%d\n",3*compteur);
+	//printf("w*h/size=%d\n",w*h/size);
+	//printf("compteur=%d\n",3*compteur);
 
 	
 
@@ -811,14 +811,14 @@ int main(int argc, char **argv)
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////:
 
 
-	printf("\n On va passer à l'enregistrement pour %d \n", rank);
+	//printf("\n On va passer à l'enregistrement pour %d \n", rank);
 
 
 	/* stocke l'image dans un fichier au format NetPbm */
 	
 	if (rank==0){
 
-		printf("\n Enregistrement de l'image pour %d \n",rank);
+		//printf("\n Enregistrement de l'image pour %d \n",rank);
 
 		struct passwd *pass; 
 		char nom_sortie[100] = "";
@@ -833,8 +833,9 @@ int main(int argc, char **argv)
 		FILE *f = fopen(nom_sortie, "w");
 		fprintf(f, "P3\n%d %d\n%d\n", w, h, 255); 
 		for (int i = 0; i < w * h; i++) 
-	  		fprintf(f,"%d %d %d ", toInt(image[3 * i]), toInt(image[3 * i + 1]), toInt(image[3 * i + 2]));
+	  		//fprintf(f,"%d %d %d ", toInt(image[3 * i]), toInt(image[3 * i + 1]), toInt(image[3 * i + 2]));
 	  		//fprintf(f,"%d %d %d ", toInt(imageFinal[3 *(w*h/(rank+1)-i)]), toInt(imageFinal[3 * (w*h/(rank+1)-i)+1]), toInt(imageFinal[3 * (w*h/(rank+1)-i)+2])); 
+			fprintf(f,"%d %d %d ", toInt(image[3 *(w*h/(rank+1)-i)]), toInt(image[3 * (w*h/(rank+1)-i)+1]), toInt(image[3 * (w*h/(rank+1)-i)+2]));
 		fclose(f); 
 		
 
@@ -843,7 +844,7 @@ int main(int argc, char **argv)
 	}
 
     if (rank==1){
-                printf("\n Enregistrement de l'image pour %d \n",rank);
+               // printf("\n Enregistrement de l'image pour %d \n",rank);
                 struct passwd *pass; 
                 char nom_sortie[100] = "";
                 char nom_rep[30] = "";
@@ -852,11 +853,11 @@ int main(int argc, char **argv)
                 sprintf(nom_rep,"/tmp/%s",pass->pw_name);
                 mkdir(nom_rep, S_IRWXU);
                 sprintf(nom_sortie, "%s/image1.ppm", nom_rep);
-			printf("\n Juste avant l'ouverture de fichier tout va bien \n");                
+			//printf("\n Juste avant l'ouverture de fichier tout va bien \n");                
                 FILE *g = fopen(nom_sortie, "w");
 			printf("\n Là, ça va bien \n");
                 fprintf(g, "P3\n%d %d\n%d\n", w, h, 255); 
-		printf("\n L'enregistrement fonctionne \n");		
+		//printf("\n L'enregistrement fonctionne \n");		
                 for (int i = 0; i < w * h; i++) 
                         //fprintf(g,"%d %d %d ", ligneDebut, ligneDebut, ligneDebut);
 			//fprintf(f,"%d %d %d ", toInt(image[3 * i]), toInt(image[3 * i + 1]), toInt(image[3 * i + 2]));
@@ -871,7 +872,7 @@ int main(int argc, char **argv)
 
 
     if (rank==2){
-                printf("\n Enregistrement de l'image pour %d \n",rank);
+                //printf("\n Enregistrement de l'image pour %d \n",rank);
                 struct passwd *pass; 
                 char nom_sortie[100] = "";
                 char nom_rep[30] = "";
@@ -880,11 +881,11 @@ int main(int argc, char **argv)
                 sprintf(nom_rep,"/tmp/%s",pass->pw_name);
                 mkdir(nom_rep, S_IRWXU);
                 sprintf(nom_sortie, "%s/image2.ppm", nom_rep);
-		printf("\n Juste avant l'ouverture de fichier tout va bien \n");                
+		//printf("\n Juste avant l'ouverture de fichier tout va bien \n");                
                 FILE *g = fopen(nom_sortie, "w");
-		printf("\n Là, ça va bien \n");
+		//printf("\n Là, ça va bien \n");
                 fprintf(g, "P3\n%d %d\n%d\n", w, h, 255); 
-		printf("\n L'enregistrement fonctionne \n");		
+		//printf("\n L'enregistrement fonctionne \n");		
                 for (int i = 0; i < w * h; i++) 
                         //fprintf(g,"%d %d %d ", ligneDebut, ligneDebut, ligneDebut);
 			//fprintf(f,"%d %d %d ", toInt(image[3 * i]), toInt(image[3 * i + 1]), toInt(image[3 * i + 2]));
@@ -896,7 +897,7 @@ int main(int argc, char **argv)
         }
 
     if (rank==3){
-                printf("\n Enregistrement de l'image pour %d \n",rank);
+                //printf("\n Enregistrement de l'image pour %d \n",rank);
                 struct passwd *pass; 
                 char nom_sortie[100] = "";
                 char nom_rep[30] = "";
@@ -905,11 +906,11 @@ int main(int argc, char **argv)
                 sprintf(nom_rep,"/tmp/%s",pass->pw_name);
                 mkdir(nom_rep, S_IRWXU);
                 sprintf(nom_sortie, "%s/image3.ppm", nom_rep);
-		printf("\n Juste avant l'ouverture de fichier tout va bien \n");                
+		//printf("\n Juste avant l'ouverture de fichier tout va bien \n");                
                 FILE *g = fopen(nom_sortie, "w");
-		printf("\n Là, ça va bien \n");
+		//printf("\n Là, ça va bien \n");
                 fprintf(g, "P3\n%d %d\n%d\n", w, h, 255); 
-		printf("\n L'enregistrement fonctionne \n");		
+		//printf("\n L'enregistrement fonctionne \n");		
                 for (int i = 0; i < w * h; i++) 
                         //fprintf(g,"%d %d %d ", ligneDebut, ligneDebut, ligneDebut);
 			//fprintf(f,"%d %d %d ", toInt(image[3 * i]), toInt(image[3 * i + 1]), toInt(image[3 * i + 2]));
