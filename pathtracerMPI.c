@@ -573,7 +573,7 @@ int main(int argc, char **argv)
 					jeton=-4;
 					MPI_Send(&jeton,1,MPI_INT,rank+1,0,MPI_COMM_WORLD);
 					//On envoie le travail à faire
-					MPI_Send(travailAFaire,2,MPI_INT,travailleurVolontaire,MPI_COMM_WORLD);
+					MPI_Send(travailAFaire,2,MPI_INT,travailleurVolontaire,0,MPI_COMM_WORLD);
 
 					//On règle sa ligne de Fin
 					ligneFin=travailAFaire[0];
