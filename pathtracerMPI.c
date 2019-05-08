@@ -425,6 +425,12 @@ int main(int argc, char **argv)
 
   	int flag=-1;
 
+  	int travailleurVolontaire;
+
+  	int travailAFaire[2]; //={LigneDebut,LigneFin}
+
+  	int volontariat=0; //Booléen =1 si le processus devient au moins une fois volontaire, ie qu'il a finit son travail initial
+
 
   	//Création du jeton
 
@@ -438,6 +444,11 @@ int main(int argc, char **argv)
   */
 
   	int jeton=-1;
+
+  	// -1 : signifie qu'il n'y a rien dans le jeton
+  	// -2 : signifie que le travail est terminé
+  	// -3 : attend et n'envoie pas de message
+  	// -4 : signifie qu'on cherche à rentrer en communication avec le processus pour lui donner du travail
 
 
 
@@ -511,19 +522,165 @@ int main(int argc, char **argv)
 
 
 
+	maLigne=ligneDebut;
 
 
-	for (maLigne= ligneDebut; maLigne < ligneFin; maLigne++){
+	//Tant que tout n'a pas été fini
+	while(jeton=!-2){
 
+
+
+///////////////////////////////////// GESTION DU JETON ///////////////////////////////////////////////////
 
 
 		MPI_Iprobe(MPI_ANY_SOURCE,MPI_ANY_TAG,MPI_COMM_WORLD,&flag,&status);
 
-		if (flag==1){
+
+		//Si le jeton est là
+		if (flag==1){ 
 
 			MPI_Recv(&jeton,1,MPI_INT,MPI_ANY_SOURCE,MPI_ANY_TAG,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
 
 			printf("Rank %d a reçu le jeton=%d\n",rank,jeton);
+
+
+
+			//Si on a reçu une demande de travail d'un autre rank que le notre
+			if (jeton>=0 && jeton!=rank){
+
+				//Mais qu'on est encore entrain de travail
+				if (maLigne<ligneFin){
+
+					travailleurVolontaire=jeton;
+
+					//On supprime la demande de travail
+					jeton=-1;
+
+					if (rank==size-1){
+						MPI_Send(&jeton,1,MPI_INT,0,0,MPI_COMM_WORLD);
+					}
+
+					else{
+						MPI_Send(&jeton,1,MPI_INT,rank+1,0,MPI_COMM_WORLD);
+					}
+
+					//On change sa ligne de Fin
+					travailAFaire[0]=(ligneFin-maLigne)/2+maLigne;
+					travailAFaire[1]=ligneFin;
+
+
+					//On dit au travailleur Volontaire qu'on va lui envoyer du travail
+					jeton=-4;
+					MPI_Send(&jeton,1,MPI_INT,rank+1,0,MPI_COMM_WORLD);
+					//On envoie le travail à faire
+					MPI_Send(travailAFaire,2,MPI_INT,travailleurVolontaire,MPI_COMM_WORLD);
+
+					//On règle sa ligne de Fin
+					ligneFin=travailAFaire[0];
+
+				}
+
+
+				//Si on a fini de travailler
+				else{
+
+					// On fait passer la demande de travail
+					if (rank==size-1){
+						MPI_Send(&jeton,1,MPI_INT,0,0,MPI_COMM_WORLD);
+					}
+
+					else{
+						MPI_Send(&jeton,1,MPI_INT,rank+1,0,MPI_COMM_WORLD);
+					}
+
+
+
+				}
+
+
+			}
+
+
+
+			//Si on veut donner du travail au processus
+			if(jeton==-4){
+
+				MPI_Recv(travailAFaire,2,MPI_INT,MPI_ANY_SOURCE,MPI_ANY_TAG,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+
+				maLigne=travailAFaire[0];
+				ligneFin=travailAFaire[1];
+
+			}
+
+
+
+
+			if (jeton==-1){
+
+				//Si on n'a pas encore fini son travail
+				if (maLigne<ligneFin){
+
+
+					//On renvoie -1 à tout le monde
+					if (rank==size-1){
+						MPI_Send(&jeton,1,MPI_INT,0,0,MPI_COMM_WORLD);
+					}
+
+					else{
+						MPI_Send(&jeton,1,MPI_INT,rank+1,0,MPI_COMM_WORLD);
+					}
+				}
+
+				//Si on a fini son travail
+				else{
+
+					//On envoie qu'on est dispo pour travailler
+					jeton=rank;
+
+					if (rank==size-1){
+						MPI_Send(&jeton,1,MPI_INT,0,0,MPI_COMM_WORLD);
+					}
+
+					else{
+						MPI_Send(&jeton,1,MPI_INT,rank+1,0,MPI_COMM_WORLD);
+					}
+
+					//On prend contact avec son employeur
+				}
+			}
+
+
+			//Si on reçoit notre propre demande de travail
+			if (jeton==rank){
+				jeton=-2;
+
+				if (rank==size-1){
+					MPI_Send(&jeton,1,MPI_INT,0,0,MPI_COMM_WORLD);
+				}
+
+				else{
+					MPI_Send(&jeton,1,MPI_INT,rank+1,0,MPI_COMM_WORLD);
+				}
+
+				jeton=-3; // Cela gèle le jeton, il va juste effectué des tours de boucle, jusqu'à attendre de reçevoir un jeton -2
+
+			}
+
+
+			// Si on reçoit qu'il n'y a plus de travail à faire
+			if (jeton==-2){
+
+				if (rank==size-1){
+					MPI_Send(&jeton,1,MPI_INT,0,0,MPI_COMM_WORLD);
+				}
+
+				else{
+					MPI_Send(&jeton,1,MPI_INT,rank+1,0,MPI_COMM_WORLD);
+				}
+
+
+
+			}
 
 
 			//Si c'est le dernier processus qui reçoit le jeton, il le renvoie à rank 0
@@ -539,50 +696,62 @@ int main(int argc, char **argv)
 		}
 
 
- 		unsigned short PRNG_state[3] = {0, 0, maLigne*maLigne*maLigne};
 
 
-		for (unsigned short j = 0; j < w; j++) {
-			/* calcule la luminance d'un pixel, avec sur-échantillonnage 2x2 */
-			double pixel_radiance[3] = {0, 0, 0};
-			for (int sub_i = 0; sub_i < 2; sub_i++) {
-				for (int sub_j = 0; sub_j < 2; sub_j++) {
-					double subpixel_radiance[3] = {0, 0, 0};
-					/* simulation de monte-carlo : on effectue plein de lancers de rayons et on moyenne */
-					for (int s = 0; s < samples; s++) { 
-						/* tire un rayon aléatoire dans une zone de la caméra qui correspond à peu près au pixel à calculer */
-						double r1 = 2 * erand48(PRNG_state);
-						double dx = (r1 < 1) ? sqrt(r1) - 1 : 1 - sqrt(2 - r1); 
-						double r2 = 2 * erand48(PRNG_state);
-						double dy = (r2 < 1) ? sqrt(r2) - 1 : 1 - sqrt(2 - r2);
-						double ray_direction[3];
-						copy(camera_direction, ray_direction);
-						axpy(((sub_i + .5 + dy) / 2 + maLigne) / h - .5, cy, ray_direction);
-						axpy(((sub_j + .5 + dx) / 2 + j) / w - .5, cx, ray_direction);
-						normalize(ray_direction);
 
-						double ray_origin[3];
-						copy(camera_position, ray_origin);
-						axpy(140, ray_direction, ray_origin);
 
-						/* estime la lumiance qui arrive sur la caméra par ce rayon */
-						double sample_radiance[3];
-						radiance(ray_origin, ray_direction, 0, PRNG_state, sample_radiance);
-						/* fait la moyenne sur tous les rayons */
-						axpy(1. / samples, sample_radiance, subpixel_radiance);
+///////////////////////////////////////////////// CALCUL D'UNE LIGNE  ///////////////////////////////////////////////////////////////
+ 
+		if (jeton!=-3 || maLigne!=ligneFin){
+
+	 		unsigned short PRNG_state[3] = {0, 0, maLigne*maLigne*maLigne};
+
+
+			for (unsigned short j = 0; j < w; j++) {
+				/* calcule la luminance d'un pixel, avec sur-échantillonnage 2x2 */
+				double pixel_radiance[3] = {0, 0, 0};
+				for (int sub_i = 0; sub_i < 2; sub_i++) {
+					for (int sub_j = 0; sub_j < 2; sub_j++) {
+						double subpixel_radiance[3] = {0, 0, 0};
+						/* simulation de monte-carlo : on effectue plein de lancers de rayons et on moyenne */
+						for (int s = 0; s < samples; s++) { 
+							/* tire un rayon aléatoire dans une zone de la caméra qui correspond à peu près au pixel à calculer */
+							double r1 = 2 * erand48(PRNG_state);
+							double dx = (r1 < 1) ? sqrt(r1) - 1 : 1 - sqrt(2 - r1); 
+							double r2 = 2 * erand48(PRNG_state);
+							double dy = (r2 < 1) ? sqrt(r2) - 1 : 1 - sqrt(2 - r2);
+							double ray_direction[3];
+							copy(camera_direction, ray_direction);
+							axpy(((sub_i + .5 + dy) / 2 + maLigne) / h - .5, cy, ray_direction);
+							axpy(((sub_j + .5 + dx) / 2 + j) / w - .5, cx, ray_direction);
+							normalize(ray_direction);
+
+							double ray_origin[3];
+							copy(camera_position, ray_origin);
+							axpy(140, ray_direction, ray_origin);
+
+							/* estime la lumiance qui arrive sur la caméra par ce rayon */
+							double sample_radiance[3];
+							radiance(ray_origin, ray_direction, 0, PRNG_state, sample_radiance);
+							/* fait la moyenne sur tous les rayons */
+							axpy(1. / samples, sample_radiance, subpixel_radiance);
+						}
+						clamp(subpixel_radiance);
+						/* fait la moyenne sur les 4 sous-pixels */
+						axpy(0.25, subpixel_radiance, pixel_radiance);
 					}
-					clamp(subpixel_radiance);
-					/* fait la moyenne sur les 4 sous-pixels */
-					axpy(0.25, subpixel_radiance, pixel_radiance);
 				}
-			}
 
-		       // printf("\n pixel_radiance = {%d,%d,%d}\n",pixel_radiance[0],pixel_radiance[1],pixel_radiance[2]); 
-		 	//copy(pixel_radiance, image + 3 * (((h/size) - 1 - (ligneFin-maLigne)) * w + j)); // <-- retournement vertical
-		       //copy(pixel_radiance,image+3*((maLigne-ligneDebut)*w+j));
-            copy(pixel_radiance,image+3*((maLigne-ligneDebut)*w+(w-j))); //Pour inverser entre gauche et droite
-            compteur++;
+			       // printf("\n pixel_radiance = {%d,%d,%d}\n",pixel_radiance[0],pixel_radiance[1],pixel_radiance[2]); 
+			 	//copy(pixel_radiance, image + 3 * (((h/size) - 1 - (ligneFin-maLigne)) * w + j)); // <-- retournement vertical
+			       //copy(pixel_radiance,image+3*((maLigne-ligneDebut)*w+j));
+	            copy(pixel_radiance,image+3*((maLigne-ligneDebut)*w+(w-j))); //Pour inverser entre gauche et droite
+	            compteur++;
+			}	
 		}	
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 		//printf("Rank :%d Jusqu'ici tout va bien\n",rank);
 
@@ -593,9 +762,16 @@ int main(int argc, char **argv)
 		//Permet à rank 0 d'envoyer le premier message
 		if (maLigne==0){
 
-			jeton=0;
+			jeton=-1;
 
 			MPI_Send(&jeton,1,MPI_INT,rank+1,0,MPI_COMM_WORLD);
+		}
+
+
+		//Si on n'a pas atteint la ligne de Fin
+		if (maLigne<ligneFin){
+		//On passe à la ligne suivante
+			maLigne++;
 		}
 	}
 
@@ -603,17 +779,9 @@ int main(int argc, char **argv)
 	printf("w*h/size=%d\n",w*h/size);
 	printf("compteur=%d\n",3*compteur);
 
-
-
-
 	
 
-
-
-
-	
-
-	MPI_Gather(image,3*w*h/size,MPI_DOUBLE,imageFinal,3*w*h/size,MPI_DOUBLE,0,MPI_COMM_WORLD);
+	//MPI_Gather(image,3*w*h/size,MPI_DOUBLE,imageFinal,3*w*h/size,MPI_DOUBLE,0,MPI_COMM_WORLD);
 	
 
 	fprintf(stderr, "\n");
@@ -657,7 +825,7 @@ int main(int argc, char **argv)
 		free(imageFinal);
 	}
 
- /*       if (rank==1){
+    if (rank==1){
                 printf("\n Enregistrement de l'image pour %d \n",rank);
                 struct passwd *pass; 
                 char nom_sortie[100] = "";
@@ -667,9 +835,9 @@ int main(int argc, char **argv)
                 sprintf(nom_rep,"/tmp/%s",pass->pw_name);
                 mkdir(nom_rep, S_IRWXU);
                 sprintf(nom_sortie, "%s/image1.ppm", nom_rep);
-		printf("\n Juste avant l'ouverture de fichier tout va bien \n");                
+			printf("\n Juste avant l'ouverture de fichier tout va bien \n");                
                 FILE *g = fopen(nom_sortie, "w");
-		printf("\n Là, ça va bien \n");
+			printf("\n Là, ça va bien \n");
                 fprintf(g, "P3\n%d %d\n%d\n", w, h, 255); 
 		printf("\n L'enregistrement fonctionne \n");		
                 for (int i = 0; i < w * h; i++) 
@@ -680,7 +848,60 @@ int main(int argc, char **argv)
 		printf("\n image1.ppm enregistré \n");
 						
                // free(imageFinal);
-        }*/
+        }
+
+
+
+
+    if (rank==2){
+                printf("\n Enregistrement de l'image pour %d \n",rank);
+                struct passwd *pass; 
+                char nom_sortie[100] = "";
+                char nom_rep[30] = "";
+                pass = getpwuid(getuid()); 
+                //sprintf(nom_rep, "/home/sasl/eleves/main/3776597/MAIN4/HPC/Projet/%s", pass->pw_name);
+                sprintf(nom_rep,"/tmp/%s",pass->pw_name);
+                mkdir(nom_rep, S_IRWXU);
+                sprintf(nom_sortie, "%s/image2.ppm", nom_rep);
+		printf("\n Juste avant l'ouverture de fichier tout va bien \n");                
+                FILE *g = fopen(nom_sortie, "w");
+		printf("\n Là, ça va bien \n");
+                fprintf(g, "P3\n%d %d\n%d\n", w, h, 255); 
+		printf("\n L'enregistrement fonctionne \n");		
+                for (int i = 0; i < w * h; i++) 
+                        //fprintf(g,"%d %d %d ", ligneDebut, ligneDebut, ligneDebut);
+			//fprintf(f,"%d %d %d ", toInt(image[3 * i]), toInt(image[3 * i + 1]), toInt(image[3 * i + 2]));
+                        fprintf(g,"%d %d %d ", toInt(image[3 *(w*h/(rank+1)-i)]), toInt(image[3 * (w*h/(rank+1)-i)+1]), toInt(image[3 * (w*h/(rank+1)-i)+2])); 
+                fclose(g); 
+		printf("\n image2.ppm enregistré \n");
+						
+               // free(imageFinal);
+        }
+
+    if (rank==3){
+                printf("\n Enregistrement de l'image pour %d \n",rank);
+                struct passwd *pass; 
+                char nom_sortie[100] = "";
+                char nom_rep[30] = "";
+                pass = getpwuid(getuid()); 
+                //sprintf(nom_rep, "/home/sasl/eleves/main/3776597/MAIN4/HPC/Projet/%s", pass->pw_name);
+                sprintf(nom_rep,"/tmp/%s",pass->pw_name);
+                mkdir(nom_rep, S_IRWXU);
+                sprintf(nom_sortie, "%s/image3.ppm", nom_rep);
+		printf("\n Juste avant l'ouverture de fichier tout va bien \n");                
+                FILE *g = fopen(nom_sortie, "w");
+		printf("\n Là, ça va bien \n");
+                fprintf(g, "P3\n%d %d\n%d\n", w, h, 255); 
+		printf("\n L'enregistrement fonctionne \n");		
+                for (int i = 0; i < w * h; i++) 
+                        //fprintf(g,"%d %d %d ", ligneDebut, ligneDebut, ligneDebut);
+			//fprintf(f,"%d %d %d ", toInt(image[3 * i]), toInt(image[3 * i + 1]), toInt(image[3 * i + 2]));
+                        fprintf(g,"%d %d %d ", toInt(image[3 *(w*h/(rank+1)-i)]), toInt(image[3 * (w*h/(rank+1)-i)+1]), toInt(image[3 * (w*h/(rank+1)-i)+2])); 
+                fclose(g); 
+		printf("\n image3.ppm enregistré \n");
+						
+               // free(imageFinal);
+        }
 
 
 	free(image);
