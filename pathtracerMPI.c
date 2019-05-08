@@ -633,6 +633,9 @@ int main(int argc, char **argv)
 
 				maLigne=travailAFaire[0];
 				ligneFin=travailAFaire[1];
+				
+				//On réinitialise le jeton pour éviter que le processus envoie 2 fois du travail
+				jeton=-1;
 
 			}
 
@@ -643,6 +646,8 @@ int main(int argc, char **argv)
 				MPI_Recv(image,3*w*travailAFaire[1]-travailAFaire[2],MPI_DOUBLE,MPI_ANY_SOURCE,MPI_ANY_TAG,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
 
 				printf("Rank %d a reçu le travail qu'il a demandé à rank %d\n",rank,status.MPI_SOURCE);
+
+				jeton=-1;
 
 			}
 
