@@ -571,7 +571,7 @@ int main(int argc, char **argv)
 					travailAFaire[1]=ligneFin;
 
 
-					rintf("Rank %d envoit du travail à faire à rank %d\n",rank,travailleurVolontaire);
+					printf("Rank %d envoit du travail à faire à rank %d\n",rank,travailleurVolontaire);
 
 					//On dit au travailleur Volontaire qu'on va lui envoyer du travail
 					jeton=-4;
@@ -749,7 +749,7 @@ int main(int argc, char **argv)
 			}	
 
 			printf("Rank:%d ligne:%d \n",rank,maLigne);
-		
+
 		}	
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
