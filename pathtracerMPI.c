@@ -20,6 +20,25 @@
 #include <mpi.h>
 
 
+
+
+//Structure pour le jeton
+
+  	typedef enum msgJeton msgJeton;
+  	enum msgJeton 
+  	{
+  		VIDE, TRAVAIL, FINI
+  	};
+
+  	typedef struct Jeton Jeton;
+  	struct Jeton
+  	{
+  		msgJeton msg;
+  		int travailleurVolontaire;
+
+  	};
+
+
 enum Refl_t {DIFF, SPEC, REFR};   /* types de matériaux (DIFFuse, SPECular, REFRactive) */
 
 struct Sphere { 
@@ -30,6 +49,8 @@ struct Sphere {
 	enum Refl_t refl;       /* type de reflection */
 	double max_reflexivity;
 };
+
+
 
 static const int KILL_DEPTH = 7;
 static const int SPLIT_DEPTH = 4;
@@ -403,19 +424,10 @@ int main(int argc, char **argv)
 
   	//Création du jeton
 
-  	typedef enum msgJeton msgJeton;
-  	enum msgJeton 
-  	{
-  		VIDE, TRAVAIL, FINI
-  	};
+  	Jeton jeton;
 
-  	typedef struct Jeton Jeton;
-  	struct Jeton
-  	{
-  		msgJeton msg;
-  		int travailleurVolontaire;
+  	jeton.msg=VIDE;
 
-  	};
 
 
 
