@@ -401,6 +401,23 @@ int main(int argc, char **argv)
   	ligneFin=(rank+1)*h/size;
 
 
+  	//Création du jeton
+
+  	typedef enum msgJeton msgJeton;
+  	enum msgJeton 
+  	{
+  		VIDE, TRAVAIL, FINI
+  	};
+
+  	typedef struct Jeton Jeton;
+  	struct Jeton
+  	{
+  		msgJeton msg;
+  		int travailleurVolontaire;
+
+  	};
+
+
 
   	printf("\n Rank : %d, ligne Debut=%d, ligneFin=%d \n",rank,ligneDebut,ligneFin);
 
@@ -530,8 +547,18 @@ int main(int argc, char **argv)
 	printf("w*h/size=%d\n",w*h/size);
 	printf("compteur=%d\n",3*compteur);
 
+
+
+
+	
+
+
+
+
+	
+
 	MPI_Gather(image,3*w*h/size,MPI_DOUBLE,imageFinal,3*w*h/size,MPI_DOUBLE,0,MPI_COMM_WORLD);
-	//MPI_Gather(image,w*h/size, MPI_UNSIGNED_CHAR,imageFinal,w*h,MPI_UNSIGNED_CHAR,0,MPI_COMM_WORLD);
+	
 
 	fprintf(stderr, "\n");
 
