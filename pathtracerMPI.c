@@ -526,7 +526,7 @@ int main(int argc, char **argv)
 
 
 	//Tant que tout n'a pas été fini
-	while(jeton=!-2){
+	while(jeton!=-2){
 
 		printf("Rank %d commence un tour de boucle while",rank);
 
