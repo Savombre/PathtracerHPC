@@ -693,7 +693,7 @@ int main(int argc, char **argv)
 			}
 
 
-	
+		flag=-1;
 
 		}
 
