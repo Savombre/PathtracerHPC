@@ -642,7 +642,7 @@ int main(int argc, char **argv)
 
 				MPI_Recv(image,3*w*travailAFaire[1]-travailAFaire[2],MPI_DOUBLE,MPI_ANY_SOURCE,MPI_ANY_TAG,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
 
-				printf("Rank %d a reçu le travail qu'il a demandé à rank %d",rank,status.MPI_SOURCE);
+				printf("Rank %d a reçu le travail qu'il a demandé à rank %d\n",rank,status.MPI_SOURCE);
 
 			}
 
@@ -817,6 +817,8 @@ int main(int argc, char **argv)
 			//Si le travail n'est pas celui initialement prévu
 			if (volontariat==1 && travailEnvoye==0){
 
+				printf("Rank %d va envoyer le travail effectué à rank %d\n",rank,employeur);
+
 				jeton=-5;
 				MPI_Send(&jeton,1,MPI_INT,employeur,0,MPI_COMM_WORLD);
 
@@ -827,7 +829,7 @@ int main(int argc, char **argv)
 				//On pourra aussi essayer avec ligneDebut
 				travailEnvoye=1;
 
-				printf("Rank %d a envoyé le travail effectué à rank %d",rank,employeur);
+				printf("Rank %d a envoyé le travail effectué à rank %d\n",rank,employeur);
 			}
 
 			volontariat=1;
