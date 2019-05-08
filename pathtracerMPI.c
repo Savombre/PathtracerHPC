@@ -433,6 +433,12 @@ int main(int argc, char **argv)
 
   	int envoi=0; //Booléen qui évite d'envoyer 2 messages inopinés dans le même tour de boucle
 
+  	int employeur;
+
+  	int travailEnvoye=0 //Booléen pour éviter que le travail ne soit envoyé 2 fois
+
+  	int taille;
+
 
   	//Création du jeton
 
@@ -451,6 +457,7 @@ int main(int argc, char **argv)
   	// -2 : signifie que le travail est terminé
   	// -3 : attend et n'envoie pas de message
   	// -4 : signifie qu'on cherche à rentrer en communication avec le processus pour lui donner du travail
+  	// -5 : signifie que le processus va reçevoir le travail qu'il a demandé
 
 
 
@@ -572,6 +579,7 @@ int main(int argc, char **argv)
 					//On change sa ligne de Fin
 					travailAFaire[0]=(ligneFin-maLigne)/2+maLigne;
 					travailAFaire[1]=ligneFin;
+					
 
 
 					printf("Rank %d envoit du travail à faire à rank %d\n",rank,travailleurVolontaire);
@@ -619,10 +627,22 @@ int main(int argc, char **argv)
 
 				printf("Rank %d reçoit du travail à faire de la part de %d\n",rank,status.MPI_SOURCE);
 
+				employeur=status.MPI_SOURCE;
+
 				MPI_Recv(travailAFaire,2,MPI_INT,MPI_ANY_SOURCE,MPI_ANY_TAG,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
 
 				maLigne=travailAFaire[0];
 				ligneFin=travailAFaire[1];
+
+			}
+
+			if (jeton==-5 && envoi==0){
+
+				MPI_Recv(&taille,1,MPI_INT,MPI_ANY_SOURCE,MPI_ANY_TAG,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+
+				MPI_Recv(image,3*w*travailAFaire[1]-travailAFaire[2],MPI_DOUBLE,MPI_ANY_SOURCE,MPI_ANY_TAG,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+
+				printf("Rank %d a reçu le travail qu'il a demandé à rank %d",rank,status.MPI_SOURCE);
 
 			}
 
@@ -789,6 +809,28 @@ int main(int argc, char **argv)
 		if (maLigne<ligneFin){
 		//On passe à la ligne suivante
 			maLigne++;
+		}
+
+		//Le processus devient volontaire pour du travail
+		if (maLigne==ligneFin){
+
+			//Si le travail n'est pas celui initialement prévu
+			if (volontariat==1 && travailEnvoye==0){
+
+				jeton=-5;
+				MPI_Send(&jeton,1,MPI_INT,employeur,0,MPI_COMM_WORLD);
+
+				taille=travailAFaire[1]-travailAFaire[0];
+				MPI_Send(&taille,1,MPI_INT,employeur,0,MPI_COMM_WORLD);
+
+				MPI_Send(image+3*w*ligneFin,3*w*taille,MPI_DOUBLE,employeur,0,MPI_COMM_WORLD);
+				//On pourra aussi essayer avec ligneDebut
+				travailEnvoye=1;
+
+				printf("Rank %d a envoyé le travail effectué à rank %d",rank,employeur);
+			}
+
+			volontariat=1;
 		}
 	}
 
