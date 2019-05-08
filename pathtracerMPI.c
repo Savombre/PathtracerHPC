@@ -27,7 +27,7 @@
   	typedef enum msgJeton msgJeton;
   	enum msgJeton 
   	{
-  		VIDE, TRAVAIL, FINI
+  		VIDE, TRAVAIL, FINI   // Respectivement 0 1 et 42
   	};
 
   	typedef struct Jeton Jeton;
@@ -410,6 +410,8 @@ int main(int argc, char **argv)
   	MPI_Comm_rank(MPI_COMM_WORLD,&rank);
   	MPI_Comm_size(MPI_COMM_WORLD,&size);
 
+  	MPI_Status status;
+
   	int ligneSuivante=size;
 
   	int maLigne;
@@ -420,6 +422,8 @@ int main(int argc, char **argv)
 
   	ligneDebut=rank*h/size;
   	ligneFin=(rank+1)*h/size;
+
+  	int flag=-1;
 
 
   	//Création du jeton
@@ -500,9 +504,16 @@ int main(int argc, char **argv)
 
 
 
-	for (maLigne= ligneDebut; maLigne < ligneFin; maLigne++) {
+	for (maLigne= ligneDebut; maLigne < ligneFin; maLigne++){
 
 
+
+		MPI_Iprobe(MPI_ANY_SOURCE,MPI_ANY_TAG,MPI_COMM_WORLD,&flag,&status);
+
+		if (flag==1){
+
+			printf("Rank %d a reçu le jeton\n",rank);
+		}
 
 
  		unsigned short PRNG_state[3] = {0, 0, maLigne*maLigne*maLigne};
