@@ -525,7 +525,17 @@ int main(int argc, char **argv)
 
 			printf("Rank %d a reçu le jeton=%d\n",rank,jeton);
 
-			MPI_Send(&jeton,1,MPI_INT,rank+1,0,MPI_COMM_WORLD);
+
+			//Si c'est le dernier processus qui reçoit le jeton, il le renvoie à rank 0
+			if (rank==size-1){
+				MPI_Send(&jeton,1,MPI_INT,0,0,MPI_COMM_WORLD);
+			}
+
+			else{
+				MPI_Send(&jeton,1,MPI_INT,rank+1,0,MPI_COMM_WORLD);
+			}
+
+
 		}
 
 
