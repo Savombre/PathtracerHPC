@@ -435,7 +435,7 @@ int main(int argc, char **argv)
 
   	int employeur;
 
-  	int travailEnvoye=0 //Booléen pour éviter que le travail ne soit envoyé 2 fois
+  	int travailEnvoye=0; //Booléen pour éviter que le travail ne soit envoyé 2 fois
 
   	int taille;
 
