@@ -659,7 +659,7 @@ int main(int argc, char **argv)
 			//Si on reçoit notre propre demande de travail
 			if (jeton==rank){
 
-				printf("Rank %d envoie le jeton de fin\n",rank);
+				printf("Rank %d envoie le jeton de fin car il a reçu jeton=%d\n",rank,jeton);
 
 				jeton=-2;
 
