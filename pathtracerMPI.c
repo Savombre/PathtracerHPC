@@ -603,7 +603,7 @@ int main(int argc, char **argv)
 						MPI_Send(&jeton,1,MPI_INT,rank+1,0,MPI_COMM_WORLD);
 					}
 
-					envoi=1
+					envoi=1;
 
 
 
