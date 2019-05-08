@@ -65,9 +65,9 @@ struct Sphere spheres[] = {
    {1e5,  {50,      1e5,        81.6},      {},           {0.75, .75,  .75},  DIFF, -1}, // Bottom 
    {1e5,  {50,     -1e5 + 81.6, 81.6},      {},           {0.75, .75,  .75},  DIFF, -1}, // Top 
 
-/*
+
    {16.5, {40,      16.5,       47},        {},           {.999, .999, .999}, SPEC, -1}, // Mirror 
-   {16.5, {73,      46.5,       88},        {},           {.999, .999, .999}, REFR, -1}, // Glass 
+/*   {16.5, {73,      46.5,       88},        {},           {.999, .999, .999}, REFR, -1}, // Glass 
    {10,   {15,      45,         112},       {},           {.999, .999, .999}, DIFF, -1}, // white ball
    {15,   {16,      16,         130},       {},           {.999, .999, 0},    REFR, -1}, // big yellow glass
    {7.5,  {40,      8,          120},        {},           {.999, .999, 0   }, REFR, -1}, // small yellow glass middle
@@ -384,13 +384,13 @@ int toInt(double x)
 int main(int argc, char **argv)
 { 
 	/* Petit cas test (small, quick and dirty): */
-	//int w = 320; 
-	//int h = 200; 
-	//int samples = 200;
+	int w = 320; 
+	int h = 200; 
+	int samples = 200;
 
-	int w = 160;
-	int h = 100;
-	int samples = 100;
+	//int w = 160;
+	//int h = 100;
+	//int samples = 100;
 
 
 	/* Gros cas test (big, slow and pretty): */
