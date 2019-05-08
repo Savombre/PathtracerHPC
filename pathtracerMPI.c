@@ -431,6 +431,8 @@ int main(int argc, char **argv)
 
   	int volontariat=0; //Booléen =1 si le processus devient au moins une fois volontaire, ie qu'il a finit son travail initial
 
+  	int envoi=0; //Booléen qui évite d'envoyer 2 messages inopinés dans le même tour de boucle
+
 
   	//Création du jeton
 
@@ -528,6 +530,7 @@ int main(int argc, char **argv)
 	//Tant que tout n'a pas été fini
 	while(jeton!=-2){
 
+		envoi=0;
 
 
 
@@ -548,7 +551,7 @@ int main(int argc, char **argv)
 
 
 			//Si on a reçu une demande de travail d'un autre rank que le notre
-			if (jeton>=0 && jeton!=rank){
+			if (jeton>=0 && jeton!=rank && envoi==0){
 
 				//Mais qu'on est encore entrain de travail
 				if (maLigne<ligneFin){
@@ -578,6 +581,9 @@ int main(int argc, char **argv)
 					MPI_Send(&jeton,1,MPI_INT,travailleurVolontaire,0,MPI_COMM_WORLD);
 					//On envoie le travail à faire
 					MPI_Send(travailAFaire,2,MPI_INT,travailleurVolontaire,0,MPI_COMM_WORLD);
+					jeton=-1;
+
+					envoi=1;
 
 					//On règle sa ligne de Fin
 					ligneFin=travailAFaire[0];
@@ -597,6 +603,8 @@ int main(int argc, char **argv)
 						MPI_Send(&jeton,1,MPI_INT,rank+1,0,MPI_COMM_WORLD);
 					}
 
+					envoi=1
+
 
 
 				}
@@ -607,7 +615,7 @@ int main(int argc, char **argv)
 
 
 			//Si on veut donner du travail au processus
-			if(jeton==-4){
+			if(jeton==-4 && envoi==0){
 
 				printf("Rank %d reçoit du travail à faire de la part de %d\n",rank,status.MPI_SOURCE);
 
@@ -621,7 +629,7 @@ int main(int argc, char **argv)
 
 
 
-			if (jeton==-1){
+			if (jeton==-1 && envoi==0){
 
 				//Si on n'a pas encore fini son travail
 				if (maLigne<ligneFin){
@@ -635,6 +643,8 @@ int main(int argc, char **argv)
 					else{
 						MPI_Send(&jeton,1,MPI_INT,rank+1,0,MPI_COMM_WORLD);
 					}
+
+					envoi=1;
 				}
 
 				//Si on a fini son travail
@@ -651,13 +661,15 @@ int main(int argc, char **argv)
 						MPI_Send(&jeton,1,MPI_INT,rank+1,0,MPI_COMM_WORLD);
 					}
 
+					envoi=1;
+
 					//On prend contact avec son employeur
 				}
 			}
 
 
 			//Si on reçoit notre propre demande de travail
-			if (jeton==rank){
+			if (jeton==rank && envoi==0){
 
 				printf("Rank %d envoie le jeton de fin car il a reçu jeton=%d\n",rank,jeton);
 
@@ -672,12 +684,13 @@ int main(int argc, char **argv)
 				}
 
 				jeton=-3; // Cela gèle le jeton, il va juste effectué des tours de boucle, jusqu'à attendre de reçevoir un jeton -2
+				envoi=1;
 
 			}
 
 
 			// Si on reçoit qu'il n'y a plus de travail à faire
-			if (jeton==-2){
+			if (jeton==-2 && envoi==0){
 
 				//Si c'est le dernier processus qui reçoit le jeton, il le renvoie à rank 0
 				if (rank==size-1){
@@ -688,8 +701,7 @@ int main(int argc, char **argv)
 					MPI_Send(&jeton,1,MPI_INT,rank+1,0,MPI_COMM_WORLD);
 				}
 
-
-
+				envoi=1;
 			}
 
 
