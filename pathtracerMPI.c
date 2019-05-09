@@ -858,7 +858,9 @@ int main(int argc, char **argv)
 			//On enregistre le travail initial dans block
 			if (volontariat==0){
 
-				for (j=0;j<w*h;j++){
+				int k;
+
+				for (k=0;k<w*h;k++){
 					block[j]=image[j];
 				}
 			}
