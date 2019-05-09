@@ -801,8 +801,8 @@ int main(int argc, char **argv)
 				}
 
 			       // printf("\n pixel_radiance = {%d,%d,%d}\n",pixel_radiance[0],pixel_radiance[1],pixel_radiance[2]); 
-				//copy(pixel_radiance, image + 3 * ((h - 1 - maLigne) * w + j)); // <-- retournement vertical
-				copy(pixel_radiance, image + 3 * (((ligneFin-ligneDebut) - 1 - maLigne) * w + j)); // <-- retournement vertical
+				copy(pixel_radiance, image + 3 * ((h - 1 - maLigne) * w + j)); // <-- retournement vertical
+				//copy(pixel_radiance, image + 3 * (((ligneFin-ligneDebut) - 1 - maLigne) * w + j)); // <-- retournement vertical
 			 	//copy(pixel_radiance, image + 3 * (((h/size) - 1 - (ligneFin-maLigne)) * w + j)); // <-- retournement vertical
 			       //copy(pixel_radiance,image+3*((maLigne-ligneDebut)*w+j));
 	            //copy(pixel_radiance,image+3*((maLigne-ligneDebut)*w+(w-j))); //Pour inverser entre gauche et droite
@@ -890,7 +890,9 @@ int main(int argc, char **argv)
 	//MPI_Gather(image,3*w*h/size,MPI_DOUBLE,imageFinal,3*w*h/size,MPI_DOUBLE,0,MPI_COMM_WORLD);
 	//MPI_Gather(block,3*w*h/size,MPI_DOUBLE,imageFinal,3*w*h/size,MPI_DOUBLE,0,MPI_COMM_WORLD);
 
-	MPI_Allreduce(MPI_IN_PLACE, image, 3*w*h, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+	//MPI_Allreduce(MPI_IN_PLACE, image, 3*w*h, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+
+	MPI_Reduce(image,imageFinal,3*w*h,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
 	
 
 	fprintf(stderr, "\n");
