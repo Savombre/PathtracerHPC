@@ -860,7 +860,7 @@ int main(int argc, char **argv)
 
 				int k;
 
-				for (k=0;k<w*h;k++){
+				for (k=0;k<3*w*h;k++){
 					block[k]=image[k];
 				}
 			}
