@@ -859,7 +859,7 @@ int main(int argc, char **argv)
 
 	
 
-	MPI_Gather(image,3*w*h/size,MPI_DOUBLE,imageFinal,3*w*h/size,MPI_DOUBLE,0,MPI_COMM_WORLD);
+	MPI_Gather(image,3*w*h,MPI_DOUBLE,imageFinal,3*w*h,MPI_DOUBLE,0,MPI_COMM_WORLD);
 	
 
 	fprintf(stderr, "\n");
