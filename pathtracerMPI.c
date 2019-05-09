@@ -892,7 +892,7 @@ int main(int argc, char **argv)
 
 	//MPI_Allreduce(MPI_IN_PLACE, image, 3*w*h, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 
-	MPI_Reduce(imageFinal,image,3*w*h,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
+	MPI_Reduce(image,imageFinal,3*w*h,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
 	
 
 	fprintf(stderr, "\n");
