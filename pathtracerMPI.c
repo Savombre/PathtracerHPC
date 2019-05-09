@@ -515,6 +515,12 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
+	double *block = malloc(3 * w * h * sizeof(*block));
+	if (block == NULL) {
+		perror("Impossible d'allouer l'image");
+		exit(1);
+	}
+
 	double *imageFinal;
 
 	if (rank==0){
@@ -848,6 +854,15 @@ int main(int argc, char **argv)
 				printf("Rank %d a envoyé le travail effectué à rank %d\n",rank,employeur);
 			}
 
+
+			//On enregistre le travail initial dans block
+			if (volontariat==0){
+
+				for (i=0;i<w*h;i++){
+					block[i]=image[i];
+				}
+			}
+
 			volontariat=1;
 			travailEnvoye=1;
 		}
@@ -859,7 +874,8 @@ int main(int argc, char **argv)
 
 	
 
-	MPI_Gather(image,3*w*h,MPI_DOUBLE,imageFinal,3*w*h,MPI_DOUBLE,0,MPI_COMM_WORLD);
+	//MPI_Gather(image,3*w*h/size,MPI_DOUBLE,imageFinal,3*w*h/size,MPI_DOUBLE,0,MPI_COMM_WORLD);
+	MPI_Gather(block,3*w*h/size,MPI_DOUBLE,imageFinal,3*w*h/size,MPI_DOUBLE,0,MPI_COMM_WORLD);
 	
 
 	fprintf(stderr, "\n");
