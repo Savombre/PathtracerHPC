@@ -850,8 +850,8 @@ int main(int argc, char **argv)
 				MPI_Send(&limite,1,MPI_INT,employeur,0,MPI_COMM_WORLD);
 
 				//MPI_Send(image+3*w*ligneFin,3*w*taille,MPI_DOUBLE,employeur,0,MPI_COMM_WORLD);  //Car on remplit l'img à l'envers
-				//MPI_Send(image+3*w*ligneDebut,3*w*taille,MPI_DOUBLE,employeur,0,MPI_COMM_WORLD);
-				MPI_Send(image,3*w*taille,MPI_DOUBLE,employeur,0,MPI_COMM_WORLD);
+				MPI_Send(image+3*w*ligneDebut,3*w*taille,MPI_DOUBLE,employeur,0,MPI_COMM_WORLD);
+				//MPI_Send(image,3*w*taille,MPI_DOUBLE,employeur,0,MPI_COMM_WORLD);
 				//travailEnvoye=1;
 
 				printf("Rank %d a envoyé le travail effectué à rank %d\n",rank,employeur);
