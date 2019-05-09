@@ -1046,8 +1046,8 @@ int main(int argc, char **argv)
         }
 
 
-	free(image);
-	free(imageFinal);
+	//free(image);
+	//free(imageFinal);
 	//free(block);
 
 
