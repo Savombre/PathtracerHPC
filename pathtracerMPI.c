@@ -838,7 +838,7 @@ int main(int argc, char **argv)
 				MPI_Send(&taille,1,MPI_INT,employeur,0,MPI_COMM_WORLD);
 
 				limite=ligneFin;
-				MPI_Send(&limite,1,MPI_INT,employeur,°,MPI_COMM_WORLD);
+				MPI_Send(&limite,1,MPI_INT,employeur,0,MPI_COMM_WORLD);
 
 				MPI_Send(image+3*w*ligneFin,3*w*taille,MPI_DOUBLE,employeur,0,MPI_COMM_WORLD);
 				//On pourra aussi essayer avec ligneDebut
