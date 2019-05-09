@@ -953,13 +953,15 @@ int main(int argc, char **argv)
 		pass = getpwuid(getuid()); 
 		sprintf(nom_rep, "/tmp/%s", pass->pw_name);
 		mkdir(nom_rep, S_IRWXU);
-		sprintf(nom_sortie, "%s/image.ppm", nom_rep);
+		sprintf(nom_sortie, "%s/image0.ppm", nom_rep);
 		
 		FILE *f = fopen(nom_sortie, "w");
 		fprintf(f, "P3\n%d %d\n%d\n", w, h, 255); 
 		for (int i = 0; i < w * h; i++) 
-	  		fprintf(f,"%d %d %d ", toInt(image[3 * i]), toInt(image[3 * i + 1]), toInt(image[3 * i + 2])); 
+	  		fprintf(f,"%d %d %d ", toInt(imageFinal[3 * i]), toInt(imageFinal[3 * i + 1]), toInt(imageFinal[3 * i + 2])); 
 		fclose(f); 
+
+		printf("\n image0.ppm enregistré \n");
 	}
 
     if (rank==1){
