@@ -981,9 +981,9 @@ int main(int argc, char **argv)
 		//printf("\n L'enregistrement fonctionne \n");		
                 for (int i = 0; i < w * h; i++) 
                         //fprintf(g,"%d %d %d ", ligneDebut, ligneDebut, ligneDebut);
-			//fprintf(f,"%d %d %d ", toInt(image[3 * i]), toInt(image[3 * i + 1]), toInt(image[3 * i + 2]));
+			fprintf(f,"%d %d %d ", toInt(image[3 * i]), toInt(image[3 * i + 1]), toInt(image[3 * i + 2]));
                         //fprintf(g,"%d %d %d ", toInt(image[3 *(w*h/(size)-i)]), toInt(image[3 * (w*h/(size)-i)+1]), toInt(image[3 * (w*h/(size)-i)+2])); 
-                fprintf(g,"%d %d %d ", toInt(image[3 *(w*h-i)]), toInt(image[3 * (w*h-i)+1]), toInt(image[3 * (w*h-i)+2]));
+                //fprintf(g,"%d %d %d ", toInt(image[3 *(w*h-i)]), toInt(image[3 * (w*h-i)+1]), toInt(image[3 * (w*h-i)+2]));
                 fclose(g); 
 		printf("\n image2.ppm enregistré \n");
 						
