@@ -633,6 +633,7 @@ int main(int argc, char **argv)
 
 				maLigne=travailAFaire[0];
 				ligneFin=travailAFaire[1];
+				travailEnvoye=0;
 				
 				//On réinitialise le jeton pour éviter que le processus envoie 2 fois du travail
 				jeton=-1;
