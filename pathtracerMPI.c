@@ -633,8 +633,9 @@ int main(int argc, char **argv)
 
 				MPI_Recv(travailAFaire,2,MPI_INT,MPI_ANY_SOURCE,MPI_ANY_TAG,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
 
-				maLigne=travailAFaire[0];
+				ligneDebut=travailAFaire[0];
 				ligneFin=travailAFaire[1];
+				maLigne=ligneDebut;
 				travailEnvoye=0;
 				
 				//On réinitialise le jeton pour éviter que le processus envoie 2 fois du travail
@@ -840,8 +841,8 @@ int main(int argc, char **argv)
 				limite=ligneFin;
 				MPI_Send(&limite,1,MPI_INT,employeur,0,MPI_COMM_WORLD);
 
-				MPI_Send(image+3*w*ligneFin,3*w*taille,MPI_DOUBLE,employeur,0,MPI_COMM_WORLD);
-				//On pourra aussi essayer avec ligneDebut
+				//MPI_Send(image+3*w*ligneFin,3*w*taille,MPI_DOUBLE,employeur,0,MPI_COMM_WORLD);  //Car on remplit l'img à l'envers
+				MPI_Send(image+3*w*ligneDebut,3*w*taille,MPI_DOUBLE,employeur,0,MPI_COMM_WORLD);
 				//travailEnvoye=1;
 
 				printf("Rank %d a envoyé le travail effectué à rank %d\n",rank,employeur);
