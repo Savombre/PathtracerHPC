@@ -439,6 +439,8 @@ int main(int argc, char **argv)
 
   	int taille;
 
+  	int limite;
+
 
   	//Création du jeton
 
@@ -640,11 +642,15 @@ int main(int argc, char **argv)
 
 			}
 
+
+			//On reçoit le travail qui a été effectué
 			if (jeton==-5 && envoi==0){
 
 				MPI_Recv(&taille,1,MPI_INT,MPI_ANY_SOURCE,MPI_ANY_TAG,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
 
-				MPI_Recv(image+3*w*ligneFin,3*w*taille,MPI_DOUBLE,MPI_ANY_SOURCE,MPI_ANY_TAG,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+				MPI_Recv(&limite,1,MPI_INT,MPI_ANY_SOURCE,MPI_ANY_TAG,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+
+				MPI_Recv(image+3*w*limite,3*w*taille,MPI_DOUBLE,MPI_ANY_SOURCE,MPI_ANY_TAG,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
 
 				printf("Rank %d a reçu le travail qu'il a demandé à rank %d\n",rank,status.MPI_SOURCE);
 
@@ -830,6 +836,9 @@ int main(int argc, char **argv)
 
 				taille=travailAFaire[1]-travailAFaire[0];
 				MPI_Send(&taille,1,MPI_INT,employeur,0,MPI_COMM_WORLD);
+
+				limite=ligneFin;
+				MPI_Send(&limite,1,MPI_INT,employeur,°,MPI_COMM_WORLD);
 
 				MPI_Send(image+3*w*ligneFin,3*w*taille,MPI_DOUBLE,employeur,0,MPI_COMM_WORLD);
 				//On pourra aussi essayer avec ligneDebut
