@@ -939,7 +939,7 @@ int main(int argc, char **argv)
 		
 
 		printf("\n image0.ppm enregistré \n");
-		free(imageFinal);
+		//free(imageFinal);
 	}
 
     if (rank==1){
