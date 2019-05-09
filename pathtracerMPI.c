@@ -516,11 +516,11 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
-	double *block = malloc(3 * w * h * sizeof(*block));
+	/*double *block = malloc(3 * w * h * sizeof(*block));
 	if (block == NULL) {
 		perror("Impossible d'allouer l'image");
 		exit(1);
-	}
+	}*/
 
 	double *imageFinal;
 
@@ -1048,7 +1048,7 @@ int main(int argc, char **argv)
 
 	free(image);
 	free(imageFinal);
-	free(block);
+	//free(block);
 
 
 
