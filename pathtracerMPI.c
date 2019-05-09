@@ -658,8 +658,8 @@ int main(int argc, char **argv)
 				MPI_Recv(&limite,1,MPI_INT,MPI_ANY_SOURCE,MPI_ANY_TAG,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
 
 				//MPI_Recv(image+3*w*ligneDebut,3*w*taille,MPI_DOUBLE,MPI_ANY_SOURCE,MPI_ANY_TAG,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-				MPI_Recv(image+3*w*limite,3*w*taille,MPI_DOUBLE,MPI_ANY_SOURCE,MPI_ANY_TAG,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-				//MPI_Recv(image,3*w*taille,MPI_DOUBLE,MPI_ANY_SOURCE,MPI_ANY_TAG,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+				//MPI_Recv(image+3*w*limite,3*w*taille,MPI_DOUBLE,MPI_ANY_SOURCE,MPI_ANY_TAG,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+				MPI_Recv(image,3*w*taille,MPI_DOUBLE,MPI_ANY_SOURCE,MPI_ANY_TAG,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
 
 				printf("Rank %d a reçu le travail qu'il a demandé à rank %d\n",rank,status.MPI_SOURCE);
 
@@ -849,9 +849,9 @@ int main(int argc, char **argv)
 				limite=ligneFin;
 				MPI_Send(&limite,1,MPI_INT,employeur,0,MPI_COMM_WORLD);
 
-				MPI_Send(image+3*w*ligneFin,3*w*taille,MPI_DOUBLE,employeur,0,MPI_COMM_WORLD);  //Car on remplit l'img à l'envers
+				//MPI_Send(image+3*w*ligneFin,3*w*taille,MPI_DOUBLE,employeur,0,MPI_COMM_WORLD);  //Car on remplit l'img à l'envers
 				//MPI_Send(image+3*w*ligneDebut,3*w*taille,MPI_DOUBLE,employeur,0,MPI_COMM_WORLD);
-				//MPI_Send(image,3*w*taille,MPI_DOUBLE,employeur,0,MPI_COMM_WORLD);
+				MPI_Send(image,3*w*taille,MPI_DOUBLE,employeur,0,MPI_COMM_WORLD);
 				//travailEnvoye=1;
 
 				printf("Rank %d a envoyé le travail effectué à rank %d\n",rank,employeur);
