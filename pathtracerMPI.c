@@ -509,7 +509,8 @@ int main(int argc, char **argv)
 
 	/* boucle principale */
 	//double *image = malloc(3 * w * h/size * sizeof(double));
-	double *image = calloc(3 * w * h * sizeof(*image));
+	//double *image = malloc(3 * w * h * sizeof(*image));
+	double *image = calloc(3 * w * h, sizeof(*image));
 	if (image == NULL) {
 		perror("Impossible d'allouer l'image");
 		exit(1);
@@ -525,7 +526,8 @@ int main(int argc, char **argv)
 
 	if (rank==0){
 
-		imageFinal = (double *) calloc(3 * w * h * sizeof(double));
+		//imageFinal = (double *) malloc(3 * w * h * sizeof(double));
+		imageFinal = (double *) calloc(3 * w * h, sizeof(double));
 		if (imageFinal == NULL) {
 			perror("Impossible d'allouer l'image");
 			exit(1);
