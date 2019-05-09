@@ -849,8 +849,8 @@ int main(int argc, char **argv)
 				limite=ligneFin;
 				MPI_Send(&limite,1,MPI_INT,employeur,0,MPI_COMM_WORLD);
 
-				//MPI_Send(image+3*w*ligneFin,3*w*taille,MPI_DOUBLE,employeur,0,MPI_COMM_WORLD);  //Car on remplit l'img à l'envers
-				MPI_Send(image+3*w*ligneDebut,3*w*taille,MPI_DOUBLE,employeur,0,MPI_COMM_WORLD);
+				MPI_Send(image+3*w*ligneFin,3*w*taille,MPI_DOUBLE,employeur,0,MPI_COMM_WORLD);  //Car on remplit l'img à l'envers
+				//MPI_Send(image+3*w*ligneDebut,3*w*taille,MPI_DOUBLE,employeur,0,MPI_COMM_WORLD);
 				//MPI_Send(image,3*w*taille,MPI_DOUBLE,employeur,0,MPI_COMM_WORLD);
 				//travailEnvoye=1;
 
