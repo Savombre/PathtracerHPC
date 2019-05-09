@@ -912,6 +912,8 @@ int main(int argc, char **argv)
 
 	/* stocke l'image dans un fichier au format NetPbm */
 	
+	/*
+
 	if (rank==0){
 
 		//printf("\n Enregistrement de l'image pour %d \n",rank);
@@ -940,6 +942,24 @@ int main(int argc, char **argv)
 
 		printf("\n image0.ppm enregistré \n");
 		//free(imageFinal);
+	} */
+
+
+	if (rank==0){
+		struct passwd *pass; 
+		char nom_sortie[100] = "";
+		char nom_rep[30] = "";
+
+		pass = getpwuid(getuid()); 
+		sprintf(nom_rep, "/tmp/%s", pass->pw_name);
+		mkdir(nom_rep, S_IRWXU);
+		sprintf(nom_sortie, "%s/image.ppm", nom_rep);
+		
+		FILE *f = fopen(nom_sortie, "w");
+		fprintf(f, "P3\n%d %d\n%d\n", w, h, 255); 
+		for (int i = 0; i < w * h; i++) 
+	  		fprintf(f,"%d %d %d ", toInt(image[3 * i]), toInt(image[3 * i + 1]), toInt(image[3 * i + 2])); 
+		fclose(f); 
 	}
 
     if (rank==1){
@@ -1025,6 +1045,7 @@ int main(int argc, char **argv)
 
 
 	free(image);
+	free(imageFinal);
 
 
 
