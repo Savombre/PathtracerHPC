@@ -888,7 +888,7 @@ int main(int argc, char **argv)
 	//MPI_Gather(image,3*w*h/size,MPI_DOUBLE,imageFinal,3*w*h/size,MPI_DOUBLE,0,MPI_COMM_WORLD);
 	//MPI_Gather(block,3*w*h/size,MPI_DOUBLE,imageFinal,3*w*h/size,MPI_DOUBLE,0,MPI_COMM_WORLD);
 
-	MPI_Allreduce(MPI_IN_PLACE, image,3*w*h, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+	MPI_Allreduce(MPI_IN_PLACE, image, 3*w*h, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 	
 
 	fprintf(stderr, "\n");
@@ -923,10 +923,10 @@ int main(int argc, char **argv)
 		FILE *f = fopen(nom_sortie, "w");
 		fprintf(f, "P3\n%d %d\n%d\n", w, h, 255); 
 		for (int i = 0; i < w * h; i++) 
-	  		//fprintf(f,"%d %d %d ", toInt(image[3 * i]), toInt(image[3 * i + 1]), toInt(image[3 * i + 2]));
+	  		fprintf(f,"%d %d %d ", toInt(image[3 * i]), toInt(image[3 * i + 1]), toInt(image[3 * i + 2]));
 	  		//fprintf(f,"%d %d %d ", toInt(imageFinal[3 *(w*h/(rank+1)-i)]), toInt(imageFinal[3 * (w*h/(rank+1)-i)+1]), toInt(imageFinal[3 * (w*h/(rank+1)-i)+2])); 
 			//fprintf(f,"%d %d %d ", toInt(image[3 *(w*h/(size)-i)]), toInt(image[3 * (w*h/(size)-i)+1]), toInt(image[3 * (w*h/(size)-i)+2]));
-			fprintf(f,"%d %d %d ", toInt(image[3 *(w*h-i)]), toInt(image[3 * (w*h-i)+1]), toInt(image[3 * (w*h-i)+2]));
+			//fprintf(f,"%d %d %d ", toInt(image[3 *(w*h-i)]), toInt(image[3 * (w*h-i)+1]), toInt(image[3 * (w*h-i)+2]));
 			//fprintf(f,"%d %d %d ", toInt(block[3 *(w*h-i)]), toInt(block[3 * (w*h-i)+1]), toInt(block[3 * (w*h-i)+2]));
 		fclose(f); 
 		
