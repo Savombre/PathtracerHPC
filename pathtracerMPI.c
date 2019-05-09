@@ -875,9 +875,9 @@ int main(int argc, char **argv)
 
 			volontariat=1;
 			travailEnvoye=1;
-		}
+		}*/
 	}
-	*/
+	
 
 	printf("\nOn va passer au Gather pour rank %d\n",rank);
 	//printf("w*h/size=%d\n",w*h/size);
