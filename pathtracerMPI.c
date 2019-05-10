@@ -596,7 +596,7 @@ int main(int argc, char **argv)
 					}
 
 					//On change sa ligne de Fin
-					travailAFaire[0]=(ligneFin-maLigne)/2+maLigne;
+					travailAFaire[0]=(ligneFin-maLigne)/2+maLigne+1;
 					travailAFaire[1]=ligneFin;
 					
 
