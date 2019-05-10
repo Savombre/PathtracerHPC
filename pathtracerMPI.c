@@ -596,7 +596,7 @@ int main(int argc, char **argv)
 					}
 
 					//On change sa ligne de Fin
-					travailAFaire[0]=(ligneFin-maLigne)/2+maLigne+1;
+					travailAFaire[0]=(ligneFin-maLigne)/2+maLigne;
 					travailAFaire[1]=ligneFin;
 					
 
@@ -650,7 +650,7 @@ int main(int argc, char **argv)
 
 				MPI_Recv(travailAFaire,2,MPI_INT,MPI_ANY_SOURCE,MPI_ANY_TAG,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
 
-				ligneDebut=travailAFaire[0];
+				ligneDebut=travailAFaire[0]+1;
 				ligneFin=travailAFaire[1];
 				maLigne=ligneDebut;
 				travailEnvoye=0;
@@ -892,7 +892,7 @@ int main(int argc, char **argv)
 	}
 	
 
-	printf("\nOn va passer au Gather pour rank %d\n",rank);
+	printf("\nOn va passer au Reduce pour rank %d\n",rank);
 	//printf("w*h/size=%d\n",w*h/size);
 	//printf("compteur=%d\n",3*compteur);
 
