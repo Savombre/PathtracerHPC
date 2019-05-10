@@ -423,7 +423,7 @@ int main(int argc, char **argv)
   	int ligneDebut,ligneFin;
 
   	ligneDebut=rank*h/size;
-  	ligneFin=(rank+1)*h/size;
+  	ligneFin=(rank+1)*h/size-1;
 
   	int flag=-1;
 
@@ -843,7 +843,7 @@ int main(int argc, char **argv)
 
 
 		//Si on n'a pas atteint la ligne de Fin
-		if (maLigne<ligneFin-1){
+		if (maLigne<ligneFin){
 		//On passe à la ligne suivante
 			maLigne++;
 		}
