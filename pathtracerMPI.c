@@ -843,7 +843,7 @@ int main(int argc, char **argv)
 
 
 		//Si on n'a pas atteint la ligne de Fin
-		if (maLigne<ligneFin){
+		if (maLigne<ligneFin-1){
 		//On passe à la ligne suivante
 			maLigne++;
 		}
