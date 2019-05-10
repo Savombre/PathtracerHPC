@@ -962,7 +962,7 @@ int main(int argc, char **argv)
 		pass = getpwuid(getuid()); 
 		sprintf(nom_rep, "/tmp/%s", pass->pw_name);
 		mkdir(nom_rep, S_IRWXU);
-		sprintf(nom_sortie, "%s/image0.ppm", nom_rep);
+		sprintf(nom_sortie, "%s/imageFinal.ppm", nom_rep);
 		
 		FILE *f = fopen(nom_sortie, "w");
 		fprintf(f, "P3\n%d %d\n%d\n", w, h, 255); 
@@ -990,9 +990,9 @@ int main(int argc, char **argv)
 		//printf("\n L'enregistrement fonctionne \n");		
                 for (int i = 0; i < w * h; i++) 
                         //fprintf(g,"%d %d %d ", ligneDebut, ligneDebut, ligneDebut);
-			//fprintf(f,"%d %d %d ", toInt(image[3 * i]), toInt(image[3 * i + 1]), toInt(image[3 * i + 2]));
+			fprintf(g,"%d %d %d ", toInt(image[3 * i]), toInt(image[3 * i + 1]), toInt(image[3 * i + 2]));
                         //fprintf(g,"%d %d %d ", toInt(image[3 *(w*h/(size)-i)]), toInt(image[3 * (w*h/(size)-i)+1]), toInt(image[3 * (w*h/(size)-i)+2])); 
-                fprintf(g,"%d %d %d ", toInt(image[3 *(w*h-i)]), toInt(image[3 * (w*h-i)+1]), toInt(image[3 * (w*h-i)+2]));
+                //fprintf(g,"%d %d %d ", toInt(image[3 *(w*h-i)]), toInt(image[3 * (w*h-i)+1]), toInt(image[3 * (w*h-i)+2]));
                 fclose(g); 
 		printf("\n image1.ppm enregistré \n");
 						
@@ -1045,9 +1045,9 @@ int main(int argc, char **argv)
 		//printf("\n L'enregistrement fonctionne \n");		
                 for (int i = 0; i < w * h; i++) 
                         //fprintf(g,"%d %d %d ", ligneDebut, ligneDebut, ligneDebut);
-			//fprintf(f,"%d %d %d ", toInt(image[3 * i]), toInt(image[3 * i + 1]), toInt(image[3 * i + 2]));
+			fprintf(g,"%d %d %d ", toInt(image[3 * i]), toInt(image[3 * i + 1]), toInt(image[3 * i + 2]));
                         //fprintf(g,"%d %d %d ", toInt(image[3 *(w*h/(rank+1)-i)]), toInt(image[3 * (w*h/(rank+1)-i)+1]), toInt(image[3 * (w*h/(rank+1)-i)+2])); 
-                fprintf(g,"%d %d %d ", toInt(image[3 *(w*h-i)]), toInt(image[3 * (w*h-i)+1]), toInt(image[3 * (w*h-i)+2]));
+                //fprintf(g,"%d %d %d ", toInt(image[3 *(w*h-i)]), toInt(image[3 * (w*h-i)+1]), toInt(image[3 * (w*h-i)+2]));
                 fclose(g); 
 		printf("\n image3.ppm enregistré \n");
 						
