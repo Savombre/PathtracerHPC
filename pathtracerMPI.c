@@ -23,7 +23,7 @@
 
 
 //Structure pour le jeton
-
+/*
   	typedef enum msgJeton msgJeton;
   	enum msgJeton 
   	{
@@ -37,6 +37,8 @@
   		int travailleurVolontaire;
 
   	};
+
+  	*/
 
 
 enum Refl_t {DIFF, SPEC, REFR};   /* types de matériaux (DIFFuse, SPECular, REFRactive) */
@@ -427,7 +429,14 @@ int main(int argc, char **argv)
 
   	int travailleurVolontaire;
 
-  	int travailAFaire[2]; //={LigneDebut,LigneFin}
+  	//int travailAFaire[2]; //={LigneDebut,LigneFin}
+
+  	int *travailAFaire=malloc(2*sizeof(int));
+
+  	if (travailAFaire == NULL) {
+			perror("\nImpossible d'allouer travail_info\n");
+			exit(1);
+		}
 
   	int volontariat=0; //Booléen =1 si le processus devient au moins une fois volontaire, ie qu'il a finit son travail initial
 
@@ -961,7 +970,7 @@ int main(int argc, char **argv)
 	  		fprintf(f,"%d %d %d ", toInt(imageFinal[3 * i]), toInt(imageFinal[3 * i + 1]), toInt(imageFinal[3 * i + 2])); 
 		fclose(f); 
 
-		printf("\n image0.ppm enregistré \n");
+		printf("\n imageFinal.ppm enregistré \n");
 	}
 
     if (rank==1){
@@ -1046,8 +1055,8 @@ int main(int argc, char **argv)
         }
 
 
-	//free(image);
-	//free(imageFinal);
+	free(image);
+	free(imageFinal);
 	//free(block);
 
 
