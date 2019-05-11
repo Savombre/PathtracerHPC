@@ -19,6 +19,8 @@
 #include <pwd.h>       /* pour getpwuid */
 #include <mpi.h>
 
+#define SIZE_H_N 50
+
 
 
 enum Refl_t {DIFF, SPEC, REFR};   /* types de matériaux (DIFFuse, SPECular, REFRactive) */
@@ -398,6 +400,11 @@ int main(int argc, char **argv)
 
 	debut=my_gettimeofday();  //Début du compte à rebours 
 
+
+
+	//Pour pouvoir tourner sur plusieurs ordinateurs
+	char hostname[SIZE_H_N];
+    gethostname(hostname, SIZE_H_N);
 
 
 	MPI_Init(&argc,&argv);
