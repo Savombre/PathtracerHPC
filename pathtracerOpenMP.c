@@ -457,14 +457,14 @@ int main(int argc, char **argv)
 
 
 
-	#pragma omp parallel
+	#pragma omp parallel for default(none) private(maLigne)
 	{
 		int rank = omp_get_thread_num();
 
 		int size = omp_get_num_threads();
 
-		ligneDebut=rank*h/size;
-  		ligneFin=(rank+1)*h/size-1;
+		int ligneDebut=rank*h/size;
+  		int ligneFin=(rank+1)*h/size-1;
 
 
 
@@ -479,8 +479,8 @@ int main(int argc, char **argv)
 
 
 
-		for (maLigne = 0; maLigne < h; maLigne++) {
-	 		unsigned short PRNG_state[3] = {0, 0, i*i*i};
+		for (maLigne = ligneDebut; maLigne < h; maLigne++) {
+	 		unsigned short PRNG_state[3] = {0, 0, maLigne*maLigne*maLigne};
 			for (unsigned short j = 0; j < w; j++) {
 				/* calcule la luminance d'un pixel, avec sur-échantillonnage 2x2 */
 				double pixel_radiance[3] = {0, 0, 0};
@@ -515,7 +515,7 @@ int main(int argc, char **argv)
 						axpy(0.25, subpixel_radiance, pixel_radiance);
 					}
 				}
-				copy(pixel_radiance, image + 3 * ((h - 1 - i) * w + j)); // <-- retournement vertical
+				copy(pixel_radiance, image + 3 * ((h - 1 - maLigne) * w + j)); // <-- retournement vertical
 			}
 		}
 
