@@ -360,15 +360,17 @@ int main(int argc, char **argv)
 	int h = 200;
 	int samples = 200;
 	
-	double debut,fin;
 
-	debut=my_gettimeofday();
 
 
 	/* Gros cas test (big, slow and pretty): */
 	/* int w = 3840; */
 	/* int h = 2160; */
 	/* int samples = 5000;  */
+
+	double debut,fin;
+
+	debut=my_gettimeofday();
 
 	if (argc == 2) 
 		samples = atoi(argv[1]) / 4;

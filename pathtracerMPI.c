@@ -21,7 +21,6 @@
 
 
 
-
 enum Refl_t {DIFF, SPEC, REFR};   /* types de matériaux (DIFFuse, SPECular, REFRactive) */
 
 struct Sphere { 
@@ -32,6 +31,12 @@ struct Sphere {
 	enum Refl_t refl;       /* type de reflection */
 	double max_reflexivity;
 };
+
+double my_gettimeofday(){
+  struct timeval tmp_time;
+  gettimeofday(&tmp_time, NULL);
+  return tmp_time.tv_sec + (tmp_time.tv_usec * 1.0e-6L);
+}
 
 
 
@@ -366,6 +371,8 @@ int toInt(double x)
 
 int main(int argc, char **argv)
 { 
+
+
 	/* Petit cas test (small, quick and dirty): */
 	//int w = 320; 
 	//int h = 200; 
@@ -383,6 +390,13 @@ int main(int argc, char **argv)
 
 
 ////////////////////////////////// INITIALISATION /////////////////////////////////////////
+
+
+	//Initialisation du chronométrage
+
+	double debut,fin;
+
+	debut=my_gettimeofday();  //Début du compte à rebours 
 
 
 
@@ -431,7 +445,6 @@ int main(int argc, char **argv)
   	// -2 : signifie que le travail est terminé
   	// -3 : attend et n'envoie pas de message
   	// -4 : signifie qu'on cherche à rentrer en communication avec le processus pour lui donner du travail
-  	// -5 : signifie que le processus va reçevoir le travail qu'il a demandé
 
 
 
@@ -893,10 +906,24 @@ int main(int argc, char **argv)
 
     */
 
+///////////////////////////////////////////////////////////////////////////////////////////////    
 
+
+
+    //Libération de la mémoire
+
+	free(travailAFaire);
 	free(image);
 	free(imageFinal);
 
+
+	//Arrêt du chronométrage
+
+	fin = my_gettimeofday();
+
+	//Affichage du temps de calcul
+  	fprintf( stderr, "Temps total de calcul : %g sec pour rank %d\n", fin - debut);
+  	fprintf( stdout, "%g\n", fin - debut);
 
 
 
