@@ -456,7 +456,7 @@ int main(int argc, char **argv)
 
 
 
-  	printf("\n Rank : %d, ligne Debut=%d, ligneFin=%d \n",rank,ligneDebut,ligneFin);
+  	//printf("\n Rank : %d, ligne Debut=%d, ligneFin=%d \n",rank,ligneDebut,ligneFin);
 
 
 
@@ -544,7 +544,7 @@ int main(int argc, char **argv)
 
 			MPI_Recv(&jeton,1,MPI_INT,MPI_ANY_SOURCE,MPI_ANY_TAG,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
 
-			printf("Rank %d a reçu le jeton=%d\n",rank,jeton);
+			//printf("Rank %d a reçu le jeton=%d\n",rank,jeton);
 
 
 
@@ -573,7 +573,7 @@ int main(int argc, char **argv)
 					
 
 
-					printf("Rank %d envoit du travail à faire à rank %d\n",rank,travailleurVolontaire);
+					//printf("Rank %d envoit du travail à faire à rank %d\n",rank,travailleurVolontaire);
 
 					//On dit au travailleur Volontaire qu'on va lui envoyer du travail
 					jeton=-4;
@@ -616,7 +616,7 @@ int main(int argc, char **argv)
 			//Si on veut donner du travail au processus
 			if(jeton==-4 && envoi==0){
 
-				printf("Rank %d reçoit du travail à faire de la part de %d\n",rank,status.MPI_SOURCE);
+				//printf("Rank %d reçoit du travail à faire de la part de %d\n",rank,status.MPI_SOURCE);
 
 				employeur=status.MPI_SOURCE;
 
@@ -675,7 +675,7 @@ int main(int argc, char **argv)
 			//Si on reçoit notre propre demande de travail
 			if (jeton==rank && envoi==0){
 
-				printf("Rank %d envoie le jeton de fin car il a reçu jeton=%d\n",rank,jeton);
+				//printf("Rank %d envoie le jeton de fin car il a reçu jeton=%d\n",rank,jeton);
 
 				jeton=-2;
 
@@ -764,7 +764,7 @@ int main(int argc, char **argv)
 				copy(pixel_radiance, image + 3 * ((h - 1 - maLigne) * w + j)); // <-- retournement vertical
 			}	
 
-			printf("Rank:%d ligne:%d \n",rank,maLigne);
+			//printf("Rank:%d ligne:%d \n",rank,maLigne);
 
 		}	
 
@@ -789,7 +789,7 @@ int main(int argc, char **argv)
 	}
 	
 
-	printf("\nOn va passer au Reduce pour rank %d\n",rank);
+	//printf("\nOn va passer au Reduce pour rank %d\n",rank);
 
 	MPI_Reduce(image,imageFinal,3*w*h,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
 	
@@ -804,7 +804,7 @@ int main(int argc, char **argv)
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////:
 
 
-	printf("\n On va passer à l'enregistrement pour %d \n", rank);
+	//printf("\n On va passer à l'enregistrement pour %d \n", rank);
 
 
 	/* stocke l'image dans un fichier au format NetPbm */
@@ -829,7 +829,7 @@ int main(int argc, char **argv)
 	  		fprintf(f,"%d %d %d ", toInt(imageFinal[3 * i]), toInt(imageFinal[3 * i + 1]), toInt(imageFinal[3 * i + 2])); 
 		fclose(f); 
 
-		printf("\n imageFinal.ppm enregistré \n");
+		//printf("\n imageFinal.ppm enregistré \n");
 	}
 
 
