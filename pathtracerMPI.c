@@ -22,25 +22,6 @@
 
 
 
-//Structure pour le jeton
-/*
-  	typedef enum msgJeton msgJeton;
-  	enum msgJeton 
-  	{
-  		VIDE, TRAVAIL, FINI   // Respectivement 0 1 et 42
-  	};
-
-  	typedef struct Jeton Jeton;
-  	struct Jeton
-  	{
-  		msgJeton msg;
-  		int travailleurVolontaire;
-
-  	};
-
-  	*/
-
-
 enum Refl_t {DIFF, SPEC, REFR};   /* types de matériaux (DIFFuse, SPECular, REFRactive) */
 
 struct Sphere { 
@@ -429,38 +410,20 @@ int main(int argc, char **argv)
 
   	int travailleurVolontaire;
 
-  	//int travailAFaire[2]; //={LigneDebut,LigneFin}
-
-  	int *travailAFaire=malloc(2*sizeof(int));
+  	int *travailAFaire=malloc(2*sizeof(int));  //={LigneDebut,LigneFin}
 
   	if (travailAFaire == NULL) {
 			perror("\nImpossible d'allouer travail_info\n");
 			exit(1);
 		}
 
-  	int volontariat=0; //Booléen =1 si le processus devient au moins une fois volontaire, ie qu'il a finit son travail initial
-
   	int envoi=0; //Booléen qui évite d'envoyer 2 messages inopinés dans le même tour de boucle
 
   	int employeur;
 
-  	int travailEnvoye=0; //Booléen pour éviter que le travail ne soit envoyé 2 fois
-
-  	int taille;
-
-  	int limite;
-
 
   	//Création du jeton
 
-
-/* Vu que c'est relou de faire communiquer des struct avec MPI on va essayer autre chose
-
-  	Jeton jeton;
-
-  	jeton.msg=VIDE;
-
-  */
 
   	int jeton=-1;
 
@@ -517,19 +480,13 @@ int main(int argc, char **argv)
 
 
 	/* boucle principale */
-	//double *image = malloc(3 * w * h/size * sizeof(double));
-	//double *image = malloc(3 * w * h * sizeof(*image));
-	double *image = calloc(3 * w * h, sizeof(*image));
+
+	double *image = calloc(3 * w * h, sizeof(double));
 	if (image == NULL) {
 		perror("Impossible d'allouer l'image");
 		exit(1);
 	}
 
-	/*double *block = malloc(3 * w * h * sizeof(*block));
-	if (block == NULL) {
-		perror("Impossible d'allouer l'image");
-		exit(1);
-	}*/
 
 	double *imageFinal;
 
@@ -542,11 +499,6 @@ int main(int argc, char **argv)
 			exit(1);
 		}
 	//}
-
-	
-			
-
-	int compteur=0;
 
 
 
@@ -653,34 +605,11 @@ int main(int argc, char **argv)
 				ligneDebut=travailAFaire[0]+1;
 				ligneFin=travailAFaire[1];
 				maLigne=ligneDebut;
-				travailEnvoye=0;
 				
 				//On réinitialise le jeton pour éviter que le processus envoie 2 fois du travail
 				jeton=-1;
 
 			}
-
-			/*
-
-			//On reçoit le travail qui a été effectué
-			if (jeton==-5 && envoi==0){
-
-				MPI_Recv(&taille,1,MPI_INT,MPI_ANY_SOURCE,MPI_ANY_TAG,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-
-				MPI_Recv(&limite,1,MPI_INT,MPI_ANY_SOURCE,MPI_ANY_TAG,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-
-				//MPI_Recv(image+3*w*ligneDebut,3*w*taille,MPI_DOUBLE,MPI_ANY_SOURCE,MPI_ANY_TAG,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-				MPI_Recv(image+3*w*limite,3*w*taille,MPI_DOUBLE,MPI_ANY_SOURCE,MPI_ANY_TAG,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-				//MPI_Recv(image,3*w*taille,MPI_DOUBLE,MPI_ANY_SOURCE,MPI_ANY_TAG,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-
-				printf("Rank %d a reçu le travail qu'il a demandé à rank %d\n",rank,status.MPI_SOURCE);
-
-				jeton=-1;
-
-			}
-
-			*/
-
 
 
 
@@ -813,11 +742,6 @@ int main(int argc, char **argv)
 
 			       // printf("\n pixel_radiance = {%d,%d,%d}\n",pixel_radiance[0],pixel_radiance[1],pixel_radiance[2]); 
 				copy(pixel_radiance, image + 3 * ((h - 1 - maLigne) * w + j)); // <-- retournement vertical
-				//copy(pixel_radiance, image + 3 * (((ligneFin-ligneDebut) - 1 - maLigne) * w + j)); // <-- retournement vertical
-			 	//copy(pixel_radiance, image + 3 * (((h/size) - 1 - (ligneFin-maLigne)) * w + j)); // <-- retournement vertical
-			       //copy(pixel_radiance,image+3*((maLigne-ligneDebut)*w+j));
-	            //copy(pixel_radiance,image+3*((maLigne-ligneDebut)*w+(w-j))); //Pour inverser entre gauche et droite
-	            compteur++;
 			}	
 
 			printf("Rank:%d ligne:%d \n",rank,maLigne);
@@ -825,12 +749,6 @@ int main(int argc, char **argv)
 		}	
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-		//printf("Rank :%d Jusqu'ici tout va bien\n",rank);
-
-		
-
 
 
 		//Permet à rank 0 d'envoyer le premier message
@@ -848,60 +766,10 @@ int main(int argc, char **argv)
 			maLigne++;
 		}
 
-
-		/*
-		//Le processus devient volontaire pour du travail
-		if (maLigne==ligneFin){
-
-			//Si le travail n'est pas celui initialement prévu
-			if (volontariat==1 && travailEnvoye==0){
-
-				printf("Rank %d va envoyer le travail effectué à rank %d\n",rank,employeur);
-
-				jeton=-5;
-				MPI_Send(&jeton,1,MPI_INT,employeur,0,MPI_COMM_WORLD);
-
-				taille=travailAFaire[1]-travailAFaire[0];
-				MPI_Send(&taille,1,MPI_INT,employeur,0,MPI_COMM_WORLD);
-
-				limite=ligneFin;
-				MPI_Send(&limite,1,MPI_INT,employeur,0,MPI_COMM_WORLD);
-
-				MPI_Send(image+3*w*ligneFin,3*w*taille,MPI_DOUBLE,employeur,0,MPI_COMM_WORLD);  //Car on remplit l'img à l'envers
-				//MPI_Send(image+3*w*ligneDebut,3*w*taille,MPI_DOUBLE,employeur,0,MPI_COMM_WORLD);
-				//MPI_Send(image,3*w*taille,MPI_DOUBLE,employeur,0,MPI_COMM_WORLD);
-				//travailEnvoye=1;
-
-				printf("Rank %d a envoyé le travail effectué à rank %d\n",rank,employeur);
-			}
-
-
-			//On enregistre le travail initial dans block
-			if (volontariat==0){
-
-				int k;
-
-				for (k=0;k<3*w*h;k++){
-					block[k]=image[k];
-				}
-			}
-
-			volontariat=1;
-			travailEnvoye=1;
-		}*/
 	}
 	
 
 	printf("\nOn va passer au Reduce pour rank %d\n",rank);
-	//printf("w*h/size=%d\n",w*h/size);
-	//printf("compteur=%d\n",3*compteur);
-
-	
-
-	//MPI_Gather(image,3*w*h/size,MPI_DOUBLE,imageFinal,3*w*h/size,MPI_DOUBLE,0,MPI_COMM_WORLD);
-	//MPI_Gather(block,3*w*h/size,MPI_DOUBLE,imageFinal,3*w*h/size,MPI_DOUBLE,0,MPI_COMM_WORLD);
-
-	//MPI_Allreduce(MPI_IN_PLACE, image, 3*w*h, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 
 	MPI_Reduce(image,imageFinal,3*w*h,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
 	
@@ -916,42 +784,13 @@ int main(int argc, char **argv)
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////:
 
 
-	//printf("\n On va passer à l'enregistrement pour %d \n", rank);
+	printf("\n On va passer à l'enregistrement pour %d \n", rank);
 
 
 	/* stocke l'image dans un fichier au format NetPbm */
 	
-	/*
+	
 
-	if (rank==0){
-
-		//printf("\n Enregistrement de l'image pour %d \n",rank);
-
-		struct passwd *pass; 
-		char nom_sortie[100] = "";
-		char nom_rep[30] = "";
-
-		pass = getpwuid(getuid()); 
-		//sprintf(nom_rep, "/home/sasl/eleves/main/3776597/MAIN4/HPC/Projet/%s", pass->pw_name);
-		sprintf(nom_rep,"/tmp/%s",pass->pw_name);
-		mkdir(nom_rep, S_IRWXU);
-		sprintf(nom_sortie, "%s/image0.ppm", nom_rep);
-		
-		FILE *f = fopen(nom_sortie, "w");
-		fprintf(f, "P3\n%d %d\n%d\n", w, h, 255); 
-		for (int i = 0; i < w * h; i++) 
-	  		//fprintf(f,"%d %d %d ", toInt(image[3 * i]), toInt(image[3 * i + 1]), toInt(image[3 * i + 2]));
-	  		fprintf(f,"%d %d %d ", toInt(imageFinal[3 * i]), toInt(imageFinal[3 * i + 1]), toInt(imageFinal[3 * i + 2]));
-	  		//fprintf(f,"%d %d %d ", toInt(imageFinal[3 *(w*h/(rank+1)-i)]), toInt(imageFinal[3 * (w*h/(rank+1)-i)+1]), toInt(imageFinal[3 * (w*h/(rank+1)-i)+2])); 
-			//fprintf(f,"%d %d %d ", toInt(image[3 *(w*h/(size)-i)]), toInt(image[3 * (w*h/(size)-i)+1]), toInt(image[3 * (w*h/(size)-i)+2]));
-			//fprintf(f,"%d %d %d ", toInt(image[3 *(w*h-i)]), toInt(image[3 * (w*h-i)+1]), toInt(image[3 * (w*h-i)+2]));
-			//fprintf(f,"%d %d %d ", toInt(block[3 *(w*h-i)]), toInt(block[3 * (w*h-i)+1]), toInt(block[3 * (w*h-i)+2]));
-		fclose(f); 
-		
-
-		printf("\n image0.ppm enregistré \n");
-		//free(imageFinal);
-	} */
 
 
 	if (rank==0){
@@ -973,27 +812,29 @@ int main(int argc, char **argv)
 		printf("\n imageFinal.ppm enregistré \n");
 	}
 
+
+/////////////////////// Pour voir ce qui a été calculé par les autres processus : ///////////////////////////////////////////////	
+
+/*
     if (rank==1){
-               // printf("\n Enregistrement de l'image pour %d \n",rank);
-                struct passwd *pass; 
-                char nom_sortie[100] = "";
-                char nom_rep[30] = "";
-                pass = getpwuid(getuid()); 
-                //sprintf(nom_rep, "/home/sasl/eleves/main/3776597/MAIN4/HPC/Projet/%s", pass->pw_name);
-                sprintf(nom_rep,"/tmp/%s",pass->pw_name);
-                mkdir(nom_rep, S_IRWXU);
-                sprintf(nom_sortie, "%s/image1.ppm", nom_rep);
-			//printf("\n Juste avant l'ouverture de fichier tout va bien \n");                
-                FILE *g = fopen(nom_sortie, "w");
-			printf("\n Là, ça va bien \n");
-                fprintf(g, "P3\n%d %d\n%d\n", w, h, 255); 
-		//printf("\n L'enregistrement fonctionne \n");		
-                for (int i = 0; i < w * h; i++) 
-                        //fprintf(g,"%d %d %d ", ligneDebut, ligneDebut, ligneDebut);
+               
+        struct passwd *pass; 
+        char nom_sortie[100] = "";
+        char nom_rep[30] = "";
+        pass = getpwuid(getuid()); 
+        
+        sprintf(nom_rep,"/tmp/%s",pass->pw_name);
+        mkdir(nom_rep, S_IRWXU);
+        sprintf(nom_sortie, "%s/image1.ppm", nom_rep);
+	         
+        FILE *g = fopen(nom_sortie, "w");
+		printf("\n Là, ça va bien \n");
+        fprintf(g, "P3\n%d %d\n%d\n", w, h, 255); 
+	
+        for (int i = 0; i < w * h; i++)        
 			fprintf(g,"%d %d %d ", toInt(image[3 * i]), toInt(image[3 * i + 1]), toInt(image[3 * i + 2]));
-                        //fprintf(g,"%d %d %d ", toInt(image[3 *(w*h/(size)-i)]), toInt(image[3 * (w*h/(size)-i)+1]), toInt(image[3 * (w*h/(size)-i)+2])); 
-                //fprintf(g,"%d %d %d ", toInt(image[3 *(w*h-i)]), toInt(image[3 * (w*h-i)+1]), toInt(image[3 * (w*h-i)+2]));
-                fclose(g); 
+
+        fclose(g); 
 		printf("\n image1.ppm enregistré \n");
 						
                // free(imageFinal);
@@ -1003,64 +844,62 @@ int main(int argc, char **argv)
 
 
     if (rank==2){
-                //printf("\n Enregistrement de l'image pour %d \n",rank);
-                struct passwd *pass; 
-                char nom_sortie[100] = "";
-                char nom_rep[30] = "";
-                pass = getpwuid(getuid()); 
-                //sprintf(nom_rep, "/home/sasl/eleves/main/3776597/MAIN4/HPC/Projet/%s", pass->pw_name);
-                sprintf(nom_rep,"/tmp/%s",pass->pw_name);
-                mkdir(nom_rep, S_IRWXU);
-                sprintf(nom_sortie, "%s/image2.ppm", nom_rep);
-		//printf("\n Juste avant l'ouverture de fichier tout va bien \n");                
-                FILE *g = fopen(nom_sortie, "w");
-		//printf("\n Là, ça va bien \n");
-                fprintf(g, "P3\n%d %d\n%d\n", w, h, 255); 
-		//printf("\n L'enregistrement fonctionne \n");		
-                for (int i = 0; i < w * h; i++) 
-                        //fprintf(g,"%d %d %d ", ligneDebut, ligneDebut, ligneDebut);
+        
+        struct passwd *pass; 
+        char nom_sortie[100] = "";
+        char nom_rep[30] = "";
+        pass = getpwuid(getuid()); 
+
+        sprintf(nom_rep,"/tmp/%s",pass->pw_name);
+        mkdir(nom_rep, S_IRWXU);
+        sprintf(nom_sortie, "%s/image2.ppm", nom_rep);
+        
+        FILE *g = fopen(nom_sortie, "w");
+
+    	fprintf(g, "P3\n%d %d\n%d\n", w, h, 255); 
+
+    	for (int i = 0; i < w * h; i++) 
 			fprintf(g,"%d %d %d ", toInt(image[3 * i]), toInt(image[3 * i + 1]), toInt(image[3 * i + 2]));
-                        //fprintf(g,"%d %d %d ", toInt(image[3 *(w*h/(size)-i)]), toInt(image[3 * (w*h/(size)-i)+1]), toInt(image[3 * (w*h/(size)-i)+2])); 
-                //fprintf(g,"%d %d %d ", toInt(image[3 *(w*h-i)]), toInt(image[3 * (w*h-i)+1]), toInt(image[3 * (w*h-i)+2]));
-                fclose(g); 
+
+    	fclose(g); 
 		printf("\n image2.ppm enregistré \n");
 						
-               // free(imageFinal);
-        }
+
+    }
 
     if (rank==3){
-                //printf("\n Enregistrement de l'image pour %d \n",rank);
-                struct passwd *pass; 
-                char nom_sortie[100] = "";
-                char nom_rep[30] = "";
-                pass = getpwuid(getuid()); 
-                //sprintf(nom_rep, "/home/sasl/eleves/main/3776597/MAIN4/HPC/Projet/%s", pass->pw_name);
-                sprintf(nom_rep,"/tmp/%s",pass->pw_name);
-                mkdir(nom_rep, S_IRWXU);
-                sprintf(nom_sortie, "%s/image3.ppm", nom_rep);
-		//printf("\n Juste avant l'ouverture de fichier tout va bien \n");                
-                FILE *g = fopen(nom_sortie, "w");
-		//printf("\n Là, ça va bien \n");
-                fprintf(g, "P3\n%d %d\n%d\n", w, h, 255); 
-		//printf("\n L'enregistrement fonctionne \n");		
-                for (int i = 0; i < w * h; i++) 
-                        //fprintf(g,"%d %d %d ", ligneDebut, ligneDebut, ligneDebut);
+
+      	struct passwd *pass; 
+        char nom_sortie[100] = "";
+        char nom_rep[30] = "";
+        pass = getpwuid(getuid()); 
+
+        sprintf(nom_rep,"/tmp/%s",pass->pw_name);
+        mkdir(nom_rep, S_IRWXU);
+        sprintf(nom_sortie, "%s/image3.ppm", nom_rep);
+   
+        FILE *g = fopen(nom_sortie, "w");
+
+        fprintf(g, "P3\n%d %d\n%d\n", w, h, 255); 
+
+        for (int i = 0; i < w * h; i++) 
 			fprintf(g,"%d %d %d ", toInt(image[3 * i]), toInt(image[3 * i + 1]), toInt(image[3 * i + 2]));
-                        //fprintf(g,"%d %d %d ", toInt(image[3 *(w*h/(rank+1)-i)]), toInt(image[3 * (w*h/(rank+1)-i)+1]), toInt(image[3 * (w*h/(rank+1)-i)+2])); 
-                //fprintf(g,"%d %d %d ", toInt(image[3 *(w*h-i)]), toInt(image[3 * (w*h-i)+1]), toInt(image[3 * (w*h-i)+2]));
-                fclose(g); 
+
+        fclose(g); 
 		printf("\n image3.ppm enregistré \n");
 						
-               // free(imageFinal);
-        }
+
+    }
+
+    */
 
 
 	free(image);
 	free(imageFinal);
-	//free(block);
+
 
 
 
 	MPI_Finalize();
-//       return 0;
+
 }
