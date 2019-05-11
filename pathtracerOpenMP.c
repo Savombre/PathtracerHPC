@@ -455,7 +455,8 @@ int main(int argc, char **argv)
 	}
 
 
-
+	#pragma omp parallel
+	{
 
 	#pragma omp parallel for default(none) private(maLigne)
 	
@@ -521,7 +522,7 @@ int main(int argc, char **argv)
 
 		printf("Rank:%d ligne:%d \n",rank,maLigne);
 
-	
+	}
 
 
 
