@@ -467,6 +467,11 @@ int main(int argc, char **argv)
 
 
 
+  		printf("\n Rank : %d, ligne Debut=%d, ligneFin=%d \n",rank,ligneDebut,ligneFin);
+
+
+
+
 
 
 
@@ -511,10 +516,18 @@ int main(int argc, char **argv)
 				copy(pixel_radiance, image + 3 * ((h - 1 - i) * w + j)); // <-- retournement vertical
 			}
 		}
-		fprintf(stderr, "\n");
+
+		printf("Rank:%d ligne:%d \n",rank,maLigne);
 
 	}
 
+
+
+	fprintf(stderr, "\n");
+
+	
+
+	printf("On passe à l'enregistrement \n");
 
 
 //////////////////////////////////////// ENREGISTREMENT DE L'IMAGE ///////////////////////////////////////	
@@ -528,13 +541,15 @@ int main(int argc, char **argv)
 		pass = getpwuid(getuid()); 
 		sprintf(nom_rep, "/tmp/%s", pass->pw_name);
 		mkdir(nom_rep, S_IRWXU);
-		sprintf(nom_sortie, "%s/image.ppm", nom_rep);
+		sprintf(nom_sortie, "%s/imageFinal.ppm", nom_rep);
 		
 		FILE *f = fopen(nom_sortie, "w");
 		fprintf(f, "P3\n%d %d\n%d\n", w, h, 255); 
 		for (int i = 0; i < w * h; i++) 
 	  		fprintf(f,"%d %d %d ", toInt(image[3 * i]), toInt(image[3 * i + 1]), toInt(image[3 * i + 2])); 
 		fclose(f); 
+
+		printf("imageFinal.ppm enregistré \n");
 	}
 
 	free(image);
