@@ -511,9 +511,11 @@ int main(int argc, char **argv)
 				}
 				copy(pixel_radiance, image + 3 * ((h - 1 - maLigne) * w + j)); // <-- retournement vertical
 			}
+
+			printf("Rank:%d ligne:%d \n",rank,maLigne);
 		}
 
-		printf("Rank:%d ligne:%d \n",rank,maLigne);
+		
 
 	}
 
