@@ -392,6 +392,11 @@ int main(int argc, char **argv)
 
 	debut=my_gettimeofday();
 
+
+	//Pour pouvoir tourner sur plusieurs ordinateurs
+	char hostname[SIZE_H_N];
+    gethostname(hostname, SIZE_H_N);
+
 	int maLigne;
 
 
