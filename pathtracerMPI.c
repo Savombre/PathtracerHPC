@@ -929,8 +929,11 @@ int main(int argc, char **argv)
 	fin = my_gettimeofday();
 
 	//Affichage du temps de calcul
-  	fprintf( stderr, "Temps total de calcul : %g sec pour rank %d\n", fin - debut);
-  	fprintf( stdout, "%g\n", fin - debut);
+	if (rank==0){
+		
+  		fprintf( stderr, "Temps total de calcul : %g sec pour rank %d\n", fin - debut);
+  		fprintf( stdout, "%g\n", fin - debut);
+  	}
 
 
 
