@@ -459,7 +459,7 @@ int main(int argc, char **argv)
 	}
 
 
-	#pragma omp parallel private(maLigne)
+	#pragma omp parallel firstprivate(maLigne)
 	{
 
 
