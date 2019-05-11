@@ -466,10 +466,10 @@ int main(int argc, char **argv)
 		int ligneDebut=rank*h/size;
   		int ligneFin=(rank+1)*h/size-1;
 
-	#pragma omp parallel for default(none) private(maLigne)
+	//#pragma omp parallel for default(none) private(maLigne)
 
 		for (maLigne = ligneDebut; maLigne < h; maLigne++) {
-			
+
 			printf("\n Rank : %d, ligne Debut=%d, ligneFin=%d \n",rank,ligneDebut,ligneFin);
 
 	 		unsigned short PRNG_state[3] = {0, 0, maLigne*maLigne*maLigne};
