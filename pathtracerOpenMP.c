@@ -20,6 +20,8 @@
 #include <omp.h>
 #include <mpi.h>
 
+#define SIZE_H_N 50
+
 
 enum Refl_t {DIFF, SPEC, REFR};   /* types de matériaux (DIFFuse, SPECular, REFRactive) */
 
