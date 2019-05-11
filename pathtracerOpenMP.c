@@ -458,7 +458,7 @@ int main(int argc, char **argv)
 
 
 	#pragma omp parallel for default(none) private(maLigne)
-	{
+	
 		int rank = omp_get_thread_num();
 
 		int size = omp_get_num_threads();
@@ -521,7 +521,7 @@ int main(int argc, char **argv)
 
 		printf("Rank:%d ligne:%d \n",rank,maLigne);
 
-	}
+	
 
 
 
