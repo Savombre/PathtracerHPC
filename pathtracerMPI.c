@@ -368,7 +368,7 @@ int toInt(double x)
 	return pow(x, 1 / 2.2) * 255 + .5;   /* gamma correction = 2.2 */
 } 
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////:
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 int main(int argc, char **argv)
@@ -376,13 +376,13 @@ int main(int argc, char **argv)
 
 
 	/* Petit cas test (small, quick and dirty): */
-	//int w = 320; 
-	//int h = 200; 
-	//int samples = 200;
+	int w = 320; 
+	int h = 200; 
+	int samples = 200;
 
-	int w = 160;
-	int h = 100;
-	int samples = 100;
+	//int w = 160;
+	//int h = 100;
+	//int samples = 100;
 
 
 	/* Gros cas test (big, slow and pretty): */
