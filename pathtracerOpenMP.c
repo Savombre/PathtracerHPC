@@ -467,23 +467,11 @@ int main(int argc, char **argv)
   		int ligneFin=(rank+1)*h/size-1;
 
 	#pragma omp parallel for default(none) private(maLigne)
-	
-
-
-
-
-
-  		printf("\n Rank : %d, ligne Debut=%d, ligneFin=%d \n",rank,ligneDebut,ligneFin);
-
-
-
-
-
-
-
-
 
 		for (maLigne = ligneDebut; maLigne < h; maLigne++) {
+			
+			printf("\n Rank : %d, ligne Debut=%d, ligneFin=%d \n",rank,ligneDebut,ligneFin);
+
 	 		unsigned short PRNG_state[3] = {0, 0, maLigne*maLigne*maLigne};
 			for (unsigned short j = 0; j < w; j++) {
 				/* calcule la luminance d'un pixel, avec sur-échantillonnage 2x2 */
