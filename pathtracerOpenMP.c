@@ -496,7 +496,7 @@ int main(int argc, char **argv)
 							double dy = (r2 < 1) ? sqrt(r2) - 1 : 1 - sqrt(2 - r2);
 							double ray_direction[3];
 							copy(camera_direction, ray_direction);
-							axpy(((sub_i + .5 + dy) / 2 + i) / h - .5, cy, ray_direction);
+							axpy(((sub_i + .5 + dy) / 2 + maLigne) / h - .5, cy, ray_direction);
 							axpy(((sub_j + .5 + dx) / 2 + j) / w - .5, cx, ray_direction);
 							normalize(ray_direction);
 
