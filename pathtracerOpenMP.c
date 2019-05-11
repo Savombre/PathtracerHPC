@@ -458,14 +458,17 @@ int main(int argc, char **argv)
 	#pragma omp parallel
 	{
 
-	#pragma omp parallel for default(none) private(maLigne)
-	
+
 		int rank = omp_get_thread_num();
 
 		int size = omp_get_num_threads();
 
 		int ligneDebut=rank*h/size;
   		int ligneFin=(rank+1)*h/size-1;
+
+	#pragma omp parallel for default(none) private(maLigne)
+	
+
 
 
 
